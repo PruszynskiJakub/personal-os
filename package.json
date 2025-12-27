@@ -9,6 +9,8 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@ai-sdk/google": "^1.2.2",
+    "ai": "^4.2.0",
     "hono": "^4.11.3"
   }
 }
