@@ -1,6 +1,6 @@
-import { Hono } from "hono";
-import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
+import { generateText } from "ai";
+import { Hono } from "hono";
 
 const app = new Hono();
 
@@ -25,4 +25,7 @@ app.post("/chat", async (c) => {
   return c.json({ response: result.text });
 });
 
-export default app;
+export default {
+  port: 3000,
+  fetch: app.fetch,
+};
