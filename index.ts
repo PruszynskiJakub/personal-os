@@ -1,31 +1,22 @@
-import { google } from "@ai-sdk/google";
-import { generateText } from "ai";
-import { Hono } from "hono";
+import {Hono} from "hono";
+import {logger} from "hono/logger";
+import {prettyJSON} from 'hono/pretty-json';
+import type {Message} from "./src/types/Message";
 
 const app = new Hono();
 
-interface Message {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
+app.use('*', logger());
+app.use('*', prettyJSON());
 
 app.post("/chat", async (c) => {
-  const body = await c.req.json<{ messages: Message[] }>();
-  const lastUserMessage = body.messages.findLast((m) => m.role === "user");
+    const body = await c.req.json<{ messages: Message[] }>();
+    const lastUserMessage = body.messages.findLast((m) => m.role === "user");
 
-  if (!lastUserMessage) {
-    return c.json({ error: "No user message found" }, 400);
-  }
-
-  const result = await generateText({
-    model: google("gemini-2.0-flash"),
-    prompt: lastUserMessage.content,
-  });
-
-  return c.json({ response: result.text });
+    return c.json({response: lastUserMessage});
 });
 
+
 export default {
-  port: 3000,
-  fetch: app.fetch,
+    port: 3000,
+    fetch: app.fetch,
 };
