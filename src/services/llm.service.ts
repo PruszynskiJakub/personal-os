@@ -1,4 +1,4 @@
-import {type CoreMessage, generateText, streamText} from "ai";
+import {generateText, streamText} from "ai";
 import {google} from "@ai-sdk/google";
 import type {CompletionConfig} from "../types/llm.ts";
 
@@ -15,7 +15,7 @@ const completion = {
 
         return result.text
     },
-    stream:  ({maxTokens = 16384, ...config}: CompletionConfig): AsyncIterable<string> => {
+    stream: ({maxTokens = 16384, ...config}: CompletionConfig): AsyncIterable<string> => {
         const result = streamText({
             model: model,
             ...config,
