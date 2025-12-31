@@ -1,25 +1,25 @@
 import {type CoreMessage, generateText, streamText} from "ai";
 import {google} from "@ai-sdk/google";
+import type {CompletionConfig} from "../types/llm.ts";
 
+const model = google('gemini-2.5-flash')
 
 const completion = {
-    text: async (config: { messages: CoreMessage[], temperature: number, maxTokens: number }): Promise<string> => {
+    text: async ({maxTokens = 16384, ...config}: CompletionConfig): Promise<string> => {
         const result = await generateText({
-                model: google('gemini-2.5-flash'),
-                messages: config.messages,
-                temperature: config.temperature,
-                maxTokens: config.maxTokens
+                model: model,
+                ...config,
+                maxTokens: maxTokens,
             }
         )
 
         return result.text
     },
-    stream:  (config: { messages: CoreMessage[], temperature: number, maxTokens: number }): AsyncIterable<string> => {
+    stream:  ({maxTokens = 16384, ...config}: CompletionConfig): AsyncIterable<string> => {
         const result = streamText({
-            model: google('gemini-2.5-flash'),
-            messages: config.messages,
-            temperature: config.temperature,
-            maxTokens: config.maxTokens
+            model: model,
+            ...config,
+            maxTokens: maxTokens,
         })
 
         return result.textStream
