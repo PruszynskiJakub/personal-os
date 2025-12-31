@@ -1,6 +1,6 @@
 const prompt = (): string => {
     return `
-    Name user intention in 3 words.
+    Name user intention in 25 words.
     `
 }
 
