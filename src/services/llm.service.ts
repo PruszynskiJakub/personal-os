@@ -1,4 +1,4 @@
-import {generateText, streamText} from "ai";
+import {generateObject, generateText, streamObject, streamText, tool} from "ai";
 import {google} from "@ai-sdk/google";
 import type {CompletionConfig} from "../types/llm.ts";
 
@@ -23,6 +23,18 @@ const completion = {
         })
 
         return result.textStream
+    },
+    object: async <T = unknown>(config: CompletionConfig): Promise<T> => {
+        try {
+            const {object} = await generateObject({
+                model: model,
+                ...config,
+                output: 'no-schema'
+            });
+            return object as T;
+        } catch (error) {
+            throw new Error(`Object completion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     }
 }
 
