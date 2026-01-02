@@ -5,14 +5,27 @@ import {z} from "zod";
 
 type LogbookAction = 'add_dive'
 
-const diveRecordSchema = z.object({})
+const diveRecordSchema = z.object({
+    spot: z.string(), //required
+    max_depth: z.number(), //required
+    duration: z.number(), //required
+    salty: z.boolean().optional(), //optional
+    weights: z.number().optional(), //optional
+    tank: z.number().optional(), //optional
+    tank_type: z.string().optional(), //optional
+    start_air: z.number().optional(),
+    end_air: z.number().optional(),
+    date: z.string(), //required,
+    dive_school: z.string().optional(),
+    score : z.number().optional() // optional
+})
 
 const addDiveLogbookSchema = z.object({
     conversation_uuid: z.string(),
     dives: z.array(diveRecordSchema)
 })
 
-const logbookService: Tool<LogbookAction> = {
+const logbookService = {
 
     execute: async (
         action: LogbookAction,
