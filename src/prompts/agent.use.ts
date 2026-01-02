@@ -1,4 +1,8 @@
-const prompt = (): string => {
+import {toolRegistry} from "../config/tools.config.ts";
+
+const prompt = (tool: string): string => {
+    const tool_actions = toolRegistry.find(t => t.name === tool);
+
     return `
     You decided to use logbook tool.
     Now it's time to choose the most fitting action and generate payload for it.
@@ -14,31 +18,11 @@ const prompt = (): string => {
     }
     
     <available_actions>
-    <action>
-        <name>add_dive</name>
-        <description>Use this action whenever user wants to record one or more dives</description>
-        <payload>
-            {
-                "dives" : [
-                    {
-                        spot: string, //required
-                        max_depth: number, //required
-                        duration: number, //required
-                        salty: boolean, //optional
-                        weights: number, //optional
-                        tank: number, //optional
-                        tank_type: "alu" | "steel", //optional
-                        start_air: number,
-                        end_air: number,
-                        date: string | date, //required,
-                        dive_school: string,
-                        score : number // optional
-                    } 
-                ]
-        </payload>
-    </action>
-    
-    
+        ${tool_actions?.actions.map((action) => `
+            <action_name>${action.name}</action_name>
+            <description>${action.description}</description>
+            <payload>${action.instructions}</payload>
+        `)}
     </available_actions>
     
     Remember json and nothing else.
