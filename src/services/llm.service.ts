@@ -5,21 +5,21 @@ import type {CompletionConfig} from "../types/llm.ts";
 const model = google('gemini-2.5-flash')
 
 const completion = {
-    text: async ({maxTokens = 16384, ...config}: CompletionConfig): Promise<string> => {
+    text: async ({max_tokens = 16384, ...config}: CompletionConfig): Promise<string> => {
         const result = await generateText({
                 model: model,
                 ...config,
-                maxTokens: maxTokens,
+                maxTokens: max_tokens,
             }
         )
 
         return result.text
     },
-    stream: ({maxTokens = 16384, ...config}: CompletionConfig): AsyncIterable<string> => {
+    stream: ({max_tokens = 16384, ...config}: CompletionConfig): AsyncIterable<string> => {
         const result = streamText({
             model: model,
             ...config,
-            maxTokens: maxTokens,
+            maxTokens: max_tokens,
         })
 
         return result.textStream

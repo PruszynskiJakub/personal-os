@@ -4,6 +4,8 @@ import {prettyJSON} from 'hono/pretty-json';
 import type {CoreMessage} from "ai";
 import {streamSSE} from 'hono/streaming'
 import {aiService} from "./src/services/ai.service.ts";
+import {completion} from "./src/services/llm.service.ts";
+import {prompt as answerPrompt} from "./src/prompts/agent.answer.ts"
 
 
 const app = new Hono();
@@ -14,13 +16,23 @@ app.use('*', prettyJSON());
 app.post("/chat", async (c) => {
     const body = await c.req.json<{ messages: CoreMessage[], stream: boolean }>();
 
-    const result = aiService.process(body.messages, body.stream);
+    const result = await aiService.process(body.messages, body.stream);
+
+    const completionConfig =  {
+        messages: [
+            { role: 'system', content: answerPrompt(result) },
+            ...body.messages
+        ] as CoreMessage[],
+        temperature: 0.2,
+        max_tokens: 2000,
+    }
+
+    const answer = body.stream ? completion.stream(completionConfig) : await completion.text(completionConfig)
 
     if (body.stream){
-        return streamResponse(c, result as AsyncIterable<string>)
+        return streamResponse(c, answer as AsyncIterable<string>)
     }else {
-        const thinkingResult = await result
-        return c.json({response: thinkingResult});
+        return c.json({response: answer});
     }
 });
 

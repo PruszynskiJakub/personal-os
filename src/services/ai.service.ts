@@ -12,7 +12,7 @@ const aiService = {
                 ...messages
             ] as CoreMessage[],
             temperature: 0,
-            maxTokens: 4000
+            max_tokens: 4000
         }
 
         return completion.text(completionConfig)
@@ -23,8 +23,11 @@ const aiService = {
 
         const thinkingResult = await aiService.think(messages)
 
+        console.log("Thinking result is ...: ", thinkingResult)
+
         if (thinkingResult == 'logbook'){
             const document = await logbookService.execute('add_dive', {conversation_uuid: "123", dives: []})
+            console.log("Logbook execution result: ", document)
             return document.text
         }
 
