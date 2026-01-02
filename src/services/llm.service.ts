@@ -1,5 +1,6 @@
-import {generateObject, generateText, streamObject, streamText, tool} from "ai";
+import {embed, generateObject, generateText, streamObject, streamText, tool} from "ai";
 import {google} from "@ai-sdk/google";
+import {openai} from '@ai-sdk/openai';
 import type {CompletionConfig} from "../types/llm.ts";
 
 const model = google('gemini-2.5-flash')
@@ -38,6 +39,16 @@ const completion = {
     }
 }
 
+const embedding = async (text: string): Promise<number[]> => {
+    const {embedding} = await embed({
+        model: openai.textEmbeddingModel('text-embedding-3-large'),
+        value: text
+    });
+
+    return embedding;
+};
+
 export {
-    completion
+    completion,
+    embedding
 }
