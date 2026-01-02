@@ -1,7 +1,6 @@
 import type {CoreMessage} from "ai";
 import {completion} from "./llm.service.ts";
 import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
-import type {Result} from "../types/agent.ts";
 import {logbookService} from "./tools/logbook.service.ts";
 
 const aiService = {
