@@ -1,10 +1,10 @@
 const prompt = (): string => {
     return `
-    Name user intention in 25 words.
-    Return json object in the format:
-    {
-        "result": "[...user intentions...]",
-    }
+    Identify user intention.
+    You may return 'answer' or 'logbook'.
+    Return 'logbook' whenever the user desire to log a dive.
+    Return 'answer' otherwise.
+    Return only single word and nothing else.
     `
 }
 

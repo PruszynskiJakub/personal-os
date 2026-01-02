@@ -22,8 +22,9 @@ const logbookService: Tool<LogbookAction> = {
             case 'add_dive': {
                 const {conversation_uuid, dives} = addDiveLogbookSchema.parse(payload);
 
-                const content = `Created ${dives.length} dives
-                    Dive details ${JSON.stringify(dives)}`;
+                const content = `
+                Created ${dives.length} dives
+                Dive details ${JSON.stringify(dives)}`.trim();
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
