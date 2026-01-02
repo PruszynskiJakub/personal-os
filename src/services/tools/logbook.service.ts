@@ -1,9 +1,8 @@
 import type {Document} from "../../types/agent.ts";
-import type {Tool} from "../../types/tool.ts";
 import {documentService} from "../document.service.ts";
 import {z} from "zod";
 
-type LogbookAction = 'add_dive'
+export type LogbookAction = 'add_dive'
 
 const diveRecordSchema = z.object({
     spot: z.string(), //required

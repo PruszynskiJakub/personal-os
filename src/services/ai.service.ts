@@ -2,7 +2,8 @@ import type {CoreMessage} from "ai";
 import {completion} from "./llm.service.ts";
 import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
 import {prompt as usePrompt} from "../prompts/agent.use.ts"
-import {logbookService} from "./tools/logbook.service.ts";
+import {type LogbookAction, logbookService} from "./tools/logbook.service.ts";
+import type {ToolUsePayload, ToolUseResponse} from "../types/agent.ts";
 
 const aiService = {
 
@@ -19,18 +20,17 @@ const aiService = {
         return completion.text(completionConfig)
     },
 
-    use: async (messages: CoreMessage[]): Promise<Record<string, any>> => {
+    use: async (params: {messages: CoreMessage[], tool: string}): Promise<ToolUsePayload> => {
         const completionConfig = {
             messages: [
-                {role: "system", content: usePrompt()},
-                ...messages
+                {role: "system", content: usePrompt(params.tool)},
+                ...params.messages
             ] as CoreMessage[],
             temperature: 0,
             max_tokens: 4000
         }
 
-        const result = await completion.object<{"result": Record<string, any>}>(completionConfig)
-
+        const result = await completion.object<ToolUseResponse>(completionConfig)
         return result.result
     },
 
@@ -43,16 +43,14 @@ const aiService = {
 
         if (thinkingResult == 'logbook') {
 
-            const useResult = await aiService.use(messages)
+            const useResult = await aiService.use({messages, tool: 'logbook'})
 
             console.log("Use result: ", useResult)
 
-            if (useResult['action'] == 'add_dive') {
+            const document = await logbookService.execute(useResult.action as LogbookAction, {conversation_uuid: "123", ...useResult.payload})
+            console.log("Logbook execution result: ", document)
 
-                const document = await logbookService.execute('add_dive', {conversation_uuid: "123", ...useResult['payload']})
-                console.log("Logbook execution result: ", document)
-                return document.text
-            }
+            return document.text
         }
 
         return thinkingResult
