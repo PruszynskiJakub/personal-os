@@ -5,3 +5,12 @@ export interface Document {
     created_at: string;
     updated_at: string;
 }
+
+export interface ToolUsePayload {
+    action: string;
+    payload: Record<string, unknown>;
+}
+
+export interface ToolUseResponse {
+    result: ToolUsePayload;
+}
