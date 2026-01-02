@@ -20,7 +20,7 @@ const aiService = {
         return completion.text(completionConfig)
     },
 
-    use: async (params: {messages: CoreMessage[], tool: string}): Promise<ToolUsePayload> => {
+    use: async (params: { messages: CoreMessage[], tool: string }): Promise<ToolUsePayload> => {
         const completionConfig = {
             messages: [
                 {role: "system", content: usePrompt(params.tool)},
@@ -34,6 +34,12 @@ const aiService = {
         return result.result
     },
 
+    act: async (params: { messages: CoreMessage[], use_payload: ToolUsePayload }): Promise<string> => {
+        const document = await logbookService.execute(params.use_payload.action as LogbookAction, {conversation_uuid: "123", ...params.use_payload.payload})
+        console.log("Logbook execution result: ", document)
+
+        return document.text
+    },
 
     process: async (messages: CoreMessage[], stream: boolean): Promise<string> => {
 
@@ -47,10 +53,9 @@ const aiService = {
 
             console.log("Use result: ", useResult)
 
-            const document = await logbookService.execute(useResult.action as LogbookAction, {conversation_uuid: "123", ...useResult.payload})
-            console.log("Logbook execution result: ", document)
-
-            return document.text
+            if (useResult.payload) {
+                return await aiService.act({messages, use_payload: useResult})
+            }
         }
 
         return thinkingResult
