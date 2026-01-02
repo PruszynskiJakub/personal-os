@@ -4,7 +4,7 @@ import type {Document} from "../types/agent.ts";
 const documentService = {
 
     createDocument: async (params: {
-        uuid: string,
+        uuid?: string,
         conversation_uuid: string,
         text: string,
     }): Promise<Document> => {
