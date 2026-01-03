@@ -9,7 +9,7 @@ const app = new Hono();
 app.use('*', logger());
 app.use('*', prettyJSON());
 
-app.route("/", ai)
+app.route("/api/ai", ai)
 
 export default {
     port: 3000,
