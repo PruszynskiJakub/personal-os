@@ -4,18 +4,25 @@ import {aiService} from "../services/ai.service.ts";
 import {completion} from "../services/llm.service.ts";
 import {streamSSE} from "hono/streaming";
 import {prompt as answerPrompt} from "../prompts/agent.answer.ts"
+import type {State} from "../types/agent.ts";
+import {v4 as uuidv4} from 'uuid';
 
 
 export const ai = new Hono()
 
 ai.post("/chat", async (c) => {
-    const body = await c.req.json<{ messages: CoreMessage[], stream: boolean }>();
+    const body = await c.req.json<{ messages: CoreMessage[], stream: boolean, conversation_uuid?: string }>();
 
-    const result = await aiService.process(body.messages);
+    const state: State = {
+        conversation_uuid: body.conversation_uuid ?? uuidv4(),
+        messages: body.messages
+    }
+
+    const newState = await aiService.process(state);
 
     const completionConfig =  {
         messages: [
-            { role: 'system', content: answerPrompt(result) },
+            { role: 'system', content: answerPrompt(newState.documents?.toString() ?? "Answer") },
             ...body.messages
         ] as CoreMessage[],
         temperature: 0.2,

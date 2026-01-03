@@ -1,3 +1,5 @@
+import type {CoreMessage} from "ai";
+
 export interface Document {
     uuid: string;
     conversation_uuid: string;
@@ -13,4 +15,13 @@ export interface ToolUsePayload {
 
 export interface ToolUseResponse {
     result: ToolUsePayload;
+}
+
+export interface State {
+    conversation_uuid: string;
+    messages: CoreMessage[]
+    tool?: string
+    action?: string
+    tool_payload?: Record<string, any>
+    documents?: Document[],
 }

@@ -2,65 +2,71 @@ import type {CoreMessage} from "ai";
 import {completion} from "./llm.service.ts";
 import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
 import {prompt as usePrompt} from "../prompts/agent.use.ts"
-import type {ToolUsePayload, ToolUseResponse} from "../types/agent.ts";
+import type {State, ToolUseResponse} from "../types/agent.ts";
 import {toolRegistry} from "../config/tools.config.ts";
 
 const aiService = {
 
-    think: (messages: CoreMessage[]): Promise<string> => {
+    think: async (state: State): Promise<State> => {
         const completionConfig = {
             messages: [
                 {role: "system", content: thinkPrompt()},
-                ...messages
+                ...state.messages
             ] as CoreMessage[],
             temperature: 0,
             max_tokens: 4000
         }
 
-        return completion.text(completionConfig)
+        const result = await completion.text(completionConfig)
+
+        return {tool: result, ...state}
     },
 
-    use: async (params: { messages: CoreMessage[], tool: string }): Promise<ToolUsePayload> => {
+    use: async (state: State): Promise<State> => {
         const completionConfig = {
             messages: [
-                {role: "system", content: usePrompt(params.tool)},
-                ...params.messages
+                {role: "system", content: usePrompt(state.tool!!)},
+                ...state.messages
             ] as CoreMessage[],
             temperature: 0,
             max_tokens: 4000
         }
 
         const result = await completion.object<ToolUseResponse>(completionConfig)
-        return result.result
+        return {tool_payload: result.result.payload, action: result.result.action, ...state}
     },
 
-    act: async (params: { messages: CoreMessage[], use_payload: ToolUsePayload, tool: string }): Promise<string> => {
-        const executor = toolRegistry.find(t => t.name == params.tool)?.executor!!
+    act: async (state: State): Promise<State> => {
+        const conversation_uuid = state.conversation_uuid
+        const tool_call = toolRegistry.find(t => t.name == state.tool)?.executor!!
 
-        const document = await executor(params.use_payload.action, {conversation_uuid: "123", ...params.use_payload.payload})
-        console.log(`${params.tool} execution result...\n ${document.text}`)
+        const document = await tool_call(state.action!!, {conversation_uuid, ...state.tool_payload})
+        console.log(`${state.tool} execution result...\n ${document.text}`)
 
-        return document.text
+
+        const documents = state.documents ?? []
+        documents.push(document)
+
+        return {documents, ...state}
     },
 
-    process: async (messages: CoreMessage[]): Promise<string> => {
+    process: async (state: State): Promise<State> => {
 
-        const thinkingResult = await aiService.think(messages)
+        let newState: State = state
+        newState = await aiService.think(newState)
 
-        console.log("Thinking result is ...: ", thinkingResult)
+        console.log("Thinking result is ...: ", newState.tool)
 
-        if (thinkingResult == 'logbook') {
 
-            const useResult = await aiService.use({messages, tool: 'logbook'})
+        newState = await aiService.use(newState)
 
-            console.log("Use result: ", useResult)
+        console.log("Use result: ", newState.tool, newState.tool_payload)
 
-            if (useResult.payload) {
-                return await aiService.act({messages, use_payload: useResult, tool: "logbook"})
-            }
+        if (newState.tool_payload) {
+            newState = await aiService.act(newState)
         }
 
-        return thinkingResult
+        return newState
     }
 }
 
