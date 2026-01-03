@@ -4,7 +4,7 @@ const prompt = (tool: string): string => {
     const tool_actions = toolRegistry.find(t => t.name === tool);
 
     return `
-    You decided to use logbook tool.
+    You decided to use ${tool}.
     Now it's time to choose the most fitting action and generate payload for it.
     
     Today is ${new Date().toISOString()}.
