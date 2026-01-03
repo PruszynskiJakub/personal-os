@@ -2,7 +2,6 @@ import type {CoreMessage} from "ai";
 import {completion} from "./llm.service.ts";
 import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
 import {prompt as usePrompt} from "../prompts/agent.use.ts"
-import {type LogbookAction, logbookService} from "./tools/logbook.service.ts";
 import type {ToolUsePayload, ToolUseResponse} from "../types/agent.ts";
 import {toolRegistry} from "../config/tools.config.ts";
 
