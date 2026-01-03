@@ -4,6 +4,7 @@ import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
 import {prompt as usePrompt} from "../prompts/agent.use.ts"
 import {type LogbookAction, logbookService} from "./tools/logbook.service.ts";
 import type {ToolUsePayload, ToolUseResponse} from "../types/agent.ts";
+import {toolRegistry} from "../config/tools.config.ts";
 
 const aiService = {
 
@@ -34,9 +35,11 @@ const aiService = {
         return result.result
     },
 
-    act: async (params: { messages: CoreMessage[], use_payload: ToolUsePayload }): Promise<string> => {
-        const document = await logbookService.execute(params.use_payload.action as LogbookAction, {conversation_uuid: "123", ...params.use_payload.payload})
-        console.log("Logbook execution result: ", document)
+    act: async (params: { messages: CoreMessage[], use_payload: ToolUsePayload, tool: string }): Promise<string> => {
+        const executor = toolRegistry.find(t => t.name == params.tool)?.executor!!
+
+        const document = await executor(params.use_payload.action, {conversation_uuid: "123", ...params.use_payload.payload})
+        console.log(`${params.tool} execution result...\n ${document.text}`)
 
         return document.text
     },
@@ -54,7 +57,7 @@ const aiService = {
             console.log("Use result: ", useResult)
 
             if (useResult.payload) {
-                return await aiService.act({messages, use_payload: useResult})
+                return await aiService.act({messages, use_payload: useResult, tool: "logbook"})
             }
         }
 

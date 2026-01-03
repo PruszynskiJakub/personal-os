@@ -1,3 +1,5 @@
+import {type LogbookAction, logbookService} from "../services/tools/logbook.service.ts";
+
 export const toolRegistry = [
     {
         name: "logbook",
@@ -27,6 +29,9 @@ export const toolRegistry = [
                     }
                 `
             }
-        ]
+        ],
+        executor: (action: string, payload: Record<string, any>) => {
+            return logbookService.execute(action as LogbookAction, payload)
+        }
     }
 ]
