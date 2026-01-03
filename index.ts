@@ -16,7 +16,7 @@ app.use('*', prettyJSON());
 app.post("/chat", async (c) => {
     const body = await c.req.json<{ messages: CoreMessage[], stream: boolean }>();
 
-    const result = await aiService.process(body.messages, body.stream);
+    const result = await aiService.process(body.messages);
 
     const completionConfig =  {
         messages: [

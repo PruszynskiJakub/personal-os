@@ -43,7 +43,7 @@ const aiService = {
         return document.text
     },
 
-    process: async (messages: CoreMessage[], stream: boolean): Promise<string> => {
+    process: async (messages: CoreMessage[]): Promise<string> => {
 
         const thinkingResult = await aiService.think(messages)
 
