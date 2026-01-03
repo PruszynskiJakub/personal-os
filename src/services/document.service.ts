@@ -3,9 +3,7 @@ import type {Document} from "../types/agent.ts";
 
 
 function createDocumentService() {
-
     return {
-
         async createDocument(params: {
             uuid?: string,
             conversation_uuid: string,
