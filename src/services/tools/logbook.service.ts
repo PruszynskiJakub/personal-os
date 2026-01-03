@@ -16,7 +16,7 @@ const diveRecordSchema = z.object({
     end_air: z.number().optional(),
     date: z.string(), //required,
     dive_school: z.string().optional(),
-    score : z.number().optional() // optional
+    score: z.number().optional() // optional
 })
 
 const addDiveLogbookSchema = z.object({
