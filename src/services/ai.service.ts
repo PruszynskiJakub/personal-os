@@ -4,6 +4,7 @@ import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
 import {prompt as usePrompt} from "../prompts/agent.use.ts"
 import type {State, ToolUseResponse} from "../types/agent.ts";
 import {toolRegistry} from "../config/tools.config.ts";
+import type {LangfuseTraceClient} from "langfuse";
 
 const aiService = {
 
@@ -50,7 +51,7 @@ const aiService = {
         return {documents, ...state}
     },
 
-    process: async (state: State): Promise<State> => {
+    process: async (state: State, trace: LangfuseTraceClient): Promise<State> => {
 
         let newState: State = state
         newState = await aiService.think(newState)

@@ -6,6 +6,7 @@ import {streamSSE} from "hono/streaming";
 import {prompt as answerPrompt} from "../prompts/agent.answer.ts"
 import type {State} from "../types/agent.ts";
 import {v4 as uuidv4} from 'uuid';
+import {langfuseService} from "../services/langfuse.service.ts";
 
 
 export const ai = new Hono()
@@ -13,12 +14,16 @@ export const ai = new Hono()
 ai.post("/chat", async (c) => {
     const body = await c.req.json<{ messages: CoreMessage[], stream: boolean, conversation_uuid?: string }>();
 
+    const conversation_uuid = body.conversation_uuid ?? uuidv4();
+
+    const trace = langfuseService.initializeTrace({name: 'general', session_id: conversation_uuid})
+
     const state: State = {
-        conversation_uuid: body.conversation_uuid ?? uuidv4(),
+        conversation_uuid: conversation_uuid,
         messages: body.messages
     }
 
-    const newState = await aiService.process(state);
+    const newState = await aiService.process(state, trace);
 
     const completionConfig =  {
         messages: [
@@ -31,9 +36,11 @@ ai.post("/chat", async (c) => {
 
     const answer = body.stream ? completion.stream(completionConfig) : await completion.text(completionConfig)
 
+
     if (body.stream){
         return streamResponse(c, answer as AsyncIterable<string>)
     }else {
+        langfuseService.finalizeTrace(trace, {messages: body.messages, completion: answer as string})
         return c.json({response: answer});
     }
 });
