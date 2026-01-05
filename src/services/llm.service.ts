@@ -3,7 +3,8 @@ import {google} from "@ai-sdk/google";
 import {openai} from '@ai-sdk/openai';
 import type {CompletionConfig} from "../types/llm.ts";
 
-const model = google('gemini-2.5-flash')
+export const modelId = "gemini-2.5-flash"
+const model = google(modelId)
 
 const completion = {
     text: async ({max_tokens = 16384, ...config}: CompletionConfig): Promise<string> => {

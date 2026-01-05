@@ -1,4 +1,4 @@
-import {Langfuse, type LangfuseTraceClient} from 'langfuse';
+import {Langfuse, type LangfuseGenerationClient, type LangfuseSpanClient, type LangfuseTraceClient} from 'langfuse';
 import {v4 as uuidv4} from 'uuid';
 import type {CoreMessage} from "ai";
 
@@ -15,7 +15,7 @@ langfuse.on('error', (error: Error) => {
 function createLangfuseService(langfuse: Langfuse) {
 
     return {
-        initializeTrace: (body: {name: string, session_id: string}): LangfuseTraceClient => {
+        initializeTrace: (body: { name: string, session_id: string }): LangfuseTraceClient => {
             return langfuse.trace({
                 id: uuidv4(),
                 sessionId: body.session_id,
@@ -23,7 +23,40 @@ function createLangfuseService(langfuse: Langfuse) {
                 userId: process.env.USER_ID,
             })
         },
-        finalizeTrace: (trace: LangfuseTraceClient, body: {messages: CoreMessage[], completion: string}) => {
+
+        startSpan: (observation: LangfuseSpanClient | LangfuseTraceClient, body: {
+            name: string
+        }): LangfuseSpanClient => {
+            return observation.span({
+                name: body.name,
+            })
+        },
+
+        endSpan: (span: LangfuseSpanClient, body: {output: unknown}) => {
+            span.end({
+                output: body.output
+            })
+        },
+
+        startGeneration: (observation: LangfuseSpanClient | LangfuseTraceClient, body: {
+            name: string,
+            model: string,
+            input: unknown
+        }): LangfuseGenerationClient => {
+            return observation.generation({
+                name: body.name,
+                model: body.model,
+                input: body.input
+            })
+        },
+
+        endGeneration: (generation: LangfuseGenerationClient, body: { output: unknown }) => {
+            generation.end({
+                output: body.output
+            })
+        },
+
+        finalizeTrace: (trace: LangfuseTraceClient, body: { messages: CoreMessage[], completion: string }) => {
             trace.update({
                 input: body.messages,
                 output: body.completion,

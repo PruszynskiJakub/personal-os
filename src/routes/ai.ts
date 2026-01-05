@@ -17,16 +17,16 @@ ai.post("/chat", async (c) => {
     const conversation_uuid = body.conversation_uuid ?? uuidv4();
 
     const state: State = {
-        trace: langfuseService.initializeTrace({name: 'general', session_id: conversation_uuid}),
+        trace: langfuseService.initializeTrace({name: conversation_uuid, session_id: conversation_uuid}),
         conversation_uuid: conversation_uuid,
         messages: body.messages
     }
 
     const newState = await aiService.process(state);
 
-    const completionConfig =  {
+    const completionConfig = {
         messages: [
-            { role: 'system', content: answerPrompt(newState.documents?.toString() ?? "Answer") },
+            {role: 'system', content: answerPrompt(newState.documents?.toString() ?? "Answer")},
             ...body.messages
         ] as CoreMessage[],
         temperature: 0.2,
@@ -36,9 +36,9 @@ ai.post("/chat", async (c) => {
     const answer = body.stream ? completion.stream(completionConfig) : await completion.text(completionConfig)
 
 
-    if (body.stream){
+    if (body.stream) {
         return streamResponse(c, answer as AsyncIterable<string>)
-    }else {
+    } else {
         langfuseService.finalizeTrace(newState.trace, {messages: body.messages, completion: answer as string})
         return c.json({response: answer});
     }
