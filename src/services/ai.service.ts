@@ -62,7 +62,7 @@ const aiService = {
 
         const document = await tool_call(state.action!!, {conversation_uuid, ...state.tool_payload})
         console.log(`${state.tool} execution result...\n ${document.text}`)
-        langfuseService.endSpan(span, {document})
+        langfuseService.endSpan(span, {output: document})
 
 
         const documents = state.documents ?? []
