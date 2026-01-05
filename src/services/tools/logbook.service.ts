@@ -34,7 +34,6 @@ const logbookService = {
             case 'add_dive': {
                 const {conversation_uuid, dives} = addDiveLogbookSchema.parse(payload);
 
-
                 const result = await fetch("https://marcin318-20318.wykr.es/webhook/d0881779-afed-4dd2-85ad-713d9b67b4e3", {
                     method: "POST",
                     body: JSON.stringify({dives: dives}),
