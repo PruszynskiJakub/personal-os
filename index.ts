@@ -5,7 +5,7 @@ import {ai} from "./src/routes/ai.ts";
 import {langfuseService} from "./src/services/langfuse.service.ts";
 import type {CoreMessage} from "ai";
 import {completion} from "./src/services/llm.service.ts";
-import {filesMiddleware} from "./src/middlewares/files.middleware.ts";
+import {attachmentsMiddleware} from "./src/middlewares/attachments.middleware.ts";
 import {files} from "./src/routes/files.ts";
 
 const app = new Hono();
@@ -21,7 +21,7 @@ const cleanup = async () => {
 process.on('SIGTERM', cleanup);
 process.on('SIGINT', cleanup);
 
-app.use("/api/ai/chat", filesMiddleware)
+app.use("/api/ai/chat", attachmentsMiddleware)
 app.route("/api/ai", ai)
 app.route("/api/files", files)
 
