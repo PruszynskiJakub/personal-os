@@ -1,4 +1,5 @@
 import type {CoreMessage} from "ai";
+import type {LangfuseTraceClient} from "langfuse";
 
 export interface Document {
     uuid: string;
@@ -18,6 +19,7 @@ export interface ToolUseResponse {
 }
 
 export interface State {
+    trace: LangfuseTraceClient;
     conversation_uuid: string;
     messages: CoreMessage[]
     tool?: string

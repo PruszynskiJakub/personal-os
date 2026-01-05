@@ -51,7 +51,7 @@ const aiService = {
         return {documents, ...state}
     },
 
-    process: async (state: State, trace: LangfuseTraceClient): Promise<State> => {
+    process: async (state: State): Promise<State> => {
 
         let newState: State = state
         newState = await aiService.think(newState)

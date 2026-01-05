@@ -16,14 +16,13 @@ ai.post("/chat", async (c) => {
 
     const conversation_uuid = body.conversation_uuid ?? uuidv4();
 
-    const trace = langfuseService.initializeTrace({name: 'general', session_id: conversation_uuid})
-
     const state: State = {
+        trace: langfuseService.initializeTrace({name: 'general', session_id: conversation_uuid}),
         conversation_uuid: conversation_uuid,
         messages: body.messages
     }
 
-    const newState = await aiService.process(state, trace);
+    const newState = await aiService.process(state);
 
     const completionConfig =  {
         messages: [
@@ -40,7 +39,7 @@ ai.post("/chat", async (c) => {
     if (body.stream){
         return streamResponse(c, answer as AsyncIterable<string>)
     }else {
-        langfuseService.finalizeTrace(trace, {messages: body.messages, completion: answer as string})
+        langfuseService.finalizeTrace(newState.trace, {messages: body.messages, completion: answer as string})
         return c.json({response: answer});
     }
 });
