@@ -22,6 +22,8 @@ process.on('SIGTERM', cleanup);
 process.on('SIGINT', cleanup);
 
 app.use("/api/ai/chat", attachmentsMiddleware)
+
+
 app.route("/api/ai", ai)
 app.route("/api/files", files)
 

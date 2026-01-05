@@ -11,8 +11,8 @@ import {langfuseService} from "../services/langfuse.service.ts";
 
 export const ai = new Hono()
 
-ai.post("/chat", async (c) => {
-    const body = await c.req.json<{ messages: CoreMessage[], stream: boolean, conversation_uuid?: string }>();
+ai.post("/chat", async (c: Context) => {
+    const body = c.get("request") as { messages: CoreMessage[], stream: boolean, conversation_uuid?: string }
 
     const conversation_uuid = body.conversation_uuid ?? uuidv4();
 
