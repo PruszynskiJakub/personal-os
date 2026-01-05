@@ -46,7 +46,8 @@ const logbookService = {
 
                 const content = `
                 Created ${dives.length} dives
-                Dive details ${JSON.stringify(dives)}`.trim();
+                Dive details ${JSON.stringify(dives)}
+                `.trim();
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
