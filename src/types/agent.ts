@@ -18,6 +18,15 @@ export interface ToolUseResponse {
     result: ToolUsePayload;
 }
 
+export interface Thoughts {
+    _thinking: string,
+    answer: 'answer' | 'logbook'
+}
+
+export interface ThoughtsResponse {
+    result: Thoughts
+}
+
 export interface State {
     trace: LangfuseTraceClient;
     conversation_uuid: string;

@@ -2,7 +2,7 @@ import type {CoreMessage} from "ai";
 import {completion, modelId} from "./llm.service.ts";
 import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
 import {prompt as usePrompt} from "../prompts/agent.use.ts"
-import type {State, ToolUseResponse} from "../types/agent.ts";
+import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
 import {toolRegistry} from "../config/tools.config.ts";
 import {langfuseService} from "./langfuse.service.ts";
 
@@ -25,11 +25,11 @@ function createAiService() {
                 input: completionConfig.messages
             })
 
-            const result = await completion.text(completionConfig)
+            const result = await completion.object<ThoughtsResponse>(completionConfig)
 
             langfuseService.endGeneration(generation, {output: result})
 
-            return {tool: result, ...state}
+            return {tool: result.result.answer, ...state}
         },
 
         use: async (state: State): Promise<State> => {
