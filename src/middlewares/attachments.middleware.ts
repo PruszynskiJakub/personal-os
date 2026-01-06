@@ -1,6 +1,9 @@
-import type { Context, Next } from "hono";
-import { z } from "zod";
-import type { CoreMessage, FilePart, ImagePart, TextPart } from "ai";
+import type {Context, Next} from "hono";
+import {z} from "zod";
+import type {CoreMessage, FilePart, ImagePart, TextPart} from "ai";
+import {v4 as uuidv4} from 'uuid';
+import {uploadFile} from "../services/upload.service.ts";
+
 
 const BaseMessageContent = z.union([
     z.string(),
@@ -27,8 +30,15 @@ const RequestSchema = z.object({
 const uploadAttachment = async (data: string) => {
     if (data.startsWith("http")) return data;
 
-    console.log("Uploading attachment...")
+    const base64Data = data.startsWith('data:') ? data : `data:image/jpeg;base64,${data}`;
 
+    const result = await uploadFile({
+        uuid: uuidv4(),
+        file: {base64: base64Data, mime_type: 'image/jpeg'},
+        original_name: 'image.jpeg'
+    })
+
+    // return `http:localhost:3000/api/files/${result.uuid}`
     return data
 }
 
@@ -45,7 +55,8 @@ const processMultipartMessage = async (message: any): Promise<CoreMessage> => {
     const processed_message = await Promise.all(
         message.content.map(async (part: ImagePart | TextPart | FilePart) => {
             if (part.type === "image") {
-                return part as ImagePart
+                const url = await uploadAttachment(part.image as string)
+                return {type: 'image', 'image': url} as ImagePart
             }
             return part as TextPart | FilePart
         })
