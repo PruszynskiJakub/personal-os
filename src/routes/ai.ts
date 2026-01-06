@@ -16,13 +16,14 @@ ai.post("/chat", async (c: Context) => {
 
     const conversation_uuid = body.conversation_uuid ?? uuidv4();
 
+    const trace = langfuseService.initializeTrace({name: conversation_uuid, session_id: conversation_uuid})
+
     const state: State = {
-        trace: langfuseService.initializeTrace({name: conversation_uuid, session_id: conversation_uuid}),
         conversation_uuid: conversation_uuid,
         messages: body.messages
     }
 
-    const newState = await aiService.process(state);
+    const newState = await aiService.process(state, trace);
 
     const completionConfig = {
         messages: [
@@ -33,8 +34,8 @@ ai.post("/chat", async (c: Context) => {
         max_tokens: 2000,
     }
 
-    const generation = langfuseService.startGeneration(state.trace, {
-        name: "use",
+    const generation = langfuseService.startGeneration(trace, {
+        name: "answer",
         model: modelId,
         input: completionConfig.messages
     })
@@ -43,7 +44,7 @@ ai.post("/chat", async (c: Context) => {
 
     langfuseService.endGeneration(generation, {output: answer})
 
-    langfuseService.finalizeTrace(newState.trace, {messages: body.messages, completion: answer as string})
+    langfuseService.finalizeTrace(trace, {messages: body.messages, completion: answer as string})
     return c.json({response: answer});
 });
 

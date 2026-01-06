@@ -29,7 +29,6 @@ export interface ThoughtsResponse {
 }
 
 export interface State {
-    trace: LangfuseTraceClient;
     conversation_uuid: string;
     messages: CoreMessage[]
     thinking?: string,
