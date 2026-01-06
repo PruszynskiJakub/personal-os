@@ -7,7 +7,7 @@ export const uploadFile = async (input: {
     original_name: string
 }): Promise<{ uuid: string, type: 'image' | 'file', path: string }> => {
     const date_string = new Date().toISOString().slice(0, 10);
-    const storage_path = join("storage", 'image/jpeg', date_string);
+    const storage_path = join("storage", 'image', date_string);
     const file_path = join(storage_path, input.uuid, input.original_name);
 
     await mkdir(join(storage_path, input.uuid), {recursive: true});
