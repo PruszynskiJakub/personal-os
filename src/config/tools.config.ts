@@ -14,7 +14,7 @@ export const toolRegistry = [
                             {
                                 spot: string, //required
                                 max_depth: number, //required
-                                duration: number, //required
+                                duration: number, //required , this field might be called elapsed time
                                 salty: boolean, //optional
                                 weights: number, //optional
                                 tank: number, //optional
