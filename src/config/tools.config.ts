@@ -27,6 +27,17 @@ export const toolRegistry = [
                             } 
                         ]
                     }
+                    
+                    IMPORTANT: You may add multiple dives at the same time.
+                `
+            },
+            {
+                name: "read_dives",
+                description: "Use this action whenever user wants to read last N dives",
+                instructions: `
+                    {
+                        "limit: number // the number of dives to fetch
+                    }
                 `
             }
         ],

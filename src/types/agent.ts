@@ -20,7 +20,8 @@ export interface ToolUseResponse {
 
 export interface Thoughts {
     _thinking: string,
-    answer: 'answer' | 'logbook'
+    tool: 'answer' | 'logbook',
+    description: string,
 }
 
 export interface ThoughtsResponse {
@@ -31,7 +32,9 @@ export interface State {
     trace: LangfuseTraceClient;
     conversation_uuid: string;
     messages: CoreMessage[]
+    thinking?: string,
     tool?: string
+    next?: string,
     action?: string
     tool_payload?: Record<string, any>
     documents?: Document[],

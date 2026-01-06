@@ -1,7 +1,7 @@
 import {type Context, Hono} from "hono";
 import type {CoreMessage} from "ai";
 import {aiService} from "../services/ai.service.ts";
-import {completion} from "../services/llm.service.ts";
+import {completion, modelId} from "../services/llm.service.ts";
 import {streamSSE} from "hono/streaming";
 import {prompt as answerPrompt} from "../prompts/agent.answer.ts"
 import type {State} from "../types/agent.ts";
@@ -26,22 +26,25 @@ ai.post("/chat", async (c: Context) => {
 
     const completionConfig = {
         messages: [
-            {role: 'system', content: answerPrompt(newState.documents?.toString() ?? "Answer")},
+            {role: 'system', content: answerPrompt(newState)},
             ...body.messages
         ] as CoreMessage[],
         temperature: 0.2,
         max_tokens: 2000,
     }
 
-    const answer = body.stream ? completion.stream(completionConfig) : await completion.text(completionConfig)
+    const generation = langfuseService.startGeneration(state.trace, {
+        name: "use",
+        model: modelId,
+        input: completionConfig.messages
+    })
 
+    const answer = await completion.text(completionConfig)
 
-    if (body.stream) {
-        return streamResponse(c, answer as AsyncIterable<string>)
-    } else {
-        langfuseService.finalizeTrace(newState.trace, {messages: body.messages, completion: answer as string})
-        return c.json({response: answer});
-    }
+    langfuseService.endGeneration(generation, {output: answer})
+
+    langfuseService.finalizeTrace(newState.trace, {messages: body.messages, completion: answer as string})
+    return c.json({response: answer});
 });
 
 

@@ -1,10 +1,10 @@
-import type {CoreMessage} from "ai";
-import {completion, modelId} from "./llm.service.ts";
-import {prompt as thinkPrompt} from "../prompts/agent.think.ts"
-import {prompt as usePrompt} from "../prompts/agent.use.ts"
-import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
-import {toolRegistry} from "../config/tools.config.ts";
-import {langfuseService} from "./langfuse.service.ts";
+import type { CoreMessage } from "ai";
+import { toolRegistry } from "../config/tools.config.ts";
+import { prompt as thinkPrompt } from "../prompts/agent.think.ts";
+import { prompt as usePrompt } from "../prompts/agent.use.ts";
+import type { State, ThoughtsResponse, ToolUseResponse } from "../types/agent.ts";
+import { langfuseService } from "./langfuse.service.ts";
+import { completion, modelId } from "./llm.service.ts";
 
 function createAiService() {
 
@@ -12,7 +12,7 @@ function createAiService() {
         think: async (state: State): Promise<State> => {
             const completionConfig = {
                 messages: [
-                    {role: "system", content: thinkPrompt()},
+                    {role: "system", content: thinkPrompt(state)},
                     ...state.messages
                 ] as CoreMessage[],
                 temperature: 0,
@@ -29,13 +29,15 @@ function createAiService() {
 
             langfuseService.endGeneration(generation, {output: result})
 
-            return {tool: result.result.answer, ...state}
+            console.log("thinking result..", result)
+
+            return {...state, tool: result.result.tool, next: result.result.description}
         },
 
         use: async (state: State): Promise<State> => {
             const completionConfig = {
                 messages: [
-                    {role: "system", content: usePrompt(state.tool!!)},
+                    {role: "system", content: usePrompt(state)},
                     ...state.messages
                 ] as CoreMessage[],
                 temperature: 0,
@@ -52,7 +54,10 @@ function createAiService() {
 
             langfuseService.endGeneration(generation, {output: result})
 
-            return {tool_payload: result.result.payload, action: result.result.action, ...state}
+            console.log("use result..", result)
+
+
+            return {...state, tool_payload: result.result.payload, action: result.result.action}
         },
 
         act: async (state: State): Promise<State> => {
@@ -69,23 +74,31 @@ function createAiService() {
             const documents = state.documents ?? []
             documents.push(document)
 
-            return {documents, ...state}
+            return {...state, documents}
         },
 
         process: async (state: State): Promise<State> => {
 
             let newState: State = state
-            newState = await aiService.think(newState)
 
-            console.log("Thinking result is ...: ", newState.tool)
+            while (true) {
+                newState = await aiService.think(newState)
 
-            newState = await aiService.use(newState)
+                console.log("Thinking result is ...: ", newState.tool)
 
-            console.log("Use result: ", newState.tool, newState.tool_payload)
+                if (newState.tool === "answer") {
+                    break
+                }
 
-            if (newState.tool_payload) {
-                newState = await aiService.act(newState)
+                newState = await aiService.use(newState)
+
+                console.log("Use result: ", newState.tool, newState.tool_payload)
+
+                if (newState.tool_payload) {
+                    newState = await aiService.act(newState)
+                }
             }
+
 
             return newState
         }
@@ -95,5 +108,5 @@ function createAiService() {
 const aiService = createAiService()
 
 export {
-    aiService,
-}
+    aiService
+};

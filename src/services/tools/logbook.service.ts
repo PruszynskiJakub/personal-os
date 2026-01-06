@@ -2,7 +2,7 @@ import type {Document} from "../../types/agent.ts";
 import {documentService} from "../document.service.ts";
 import {z} from "zod";
 
-export type LogbookAction = 'add_dive'
+export type LogbookAction = 'add_dive' | 'read_dives'
 
 const diveRecordSchema = z.object({
     spot: z.string(), //required
@@ -22,6 +22,11 @@ const diveRecordSchema = z.object({
 const addDiveLogbookSchema = z.object({
     conversation_uuid: z.string(),
     dives: z.array(diveRecordSchema)
+})
+
+const readDivesLogbookSchema = z.object({
+    conversation_uuid: z.string(),
+    limit: z.number()
 })
 
 const logbookService = {
@@ -48,6 +53,19 @@ const logbookService = {
                 Created ${dives.length} dives
                 Dive details ${JSON.stringify(dives)}
                 `.trim();
+
+                return documentService.createDocument({
+                    conversation_uuid: conversation_uuid,
+                    text: content
+                })
+            }
+            case 'read_dives': {
+                const {conversation_uuid, limit} = readDivesLogbookSchema.parse(payload);
+
+                const content = `The last 2 dives are:
+                    1. Ko Lanta in Thailand on max depth of 25 meters, with 53 minutes underwater
+                    2. Ko Ha, 18,9m and 44 min underwater
+                `;
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
