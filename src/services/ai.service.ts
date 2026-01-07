@@ -1,4 +1,5 @@
 import type { CoreMessage } from "ai";
+import { produce } from "immer";
 import type { LangfuseSpanClient, LangfuseTraceClient } from "langfuse";
 import { toolRegistry } from "../config/tools.config.ts";
 import { prompt as thinkPrompt } from "../prompts/agent.think.ts";
@@ -6,6 +7,8 @@ import { prompt as usePrompt } from "../prompts/agent.use.ts";
 import type { State, ThoughtsResponse, ToolUseResponse } from "../types/agent.ts";
 import { langfuseService } from "./langfuse.service.ts";
 import { completion, modelId } from "./llm.service.ts";
+
+const currentCall = (state: State) => state.call_stack.at(-1)
 
 function createAiService() {
 
@@ -32,7 +35,12 @@ function createAiService() {
 
             console.log("thinking result..", result)
 
-            return {...state, tool: result.result.tool, next: result.result.description}
+            return produce(state, draft => {
+                draft.call_stack.push({ tool: result.result.tool })
+                draft.thoughts = {}
+                draft.thoughts.next_action = result.result.description
+                draft.thoughts.next_action_reasoning = result.result._thinking
+            })
         },
 
         use: async (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): Promise<State> => {
@@ -57,25 +65,26 @@ function createAiService() {
 
             console.log("use result..", result)
 
-
-            return {...state, tool_payload: result.result.payload, action: result.result.action}
+            return produce(state, draft => {
+                const call = draft.call_stack.at(-1)!
+                call.action = result.result.action
+                call.payload = result.result.payload
+            })
         },
 
         act: async (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): Promise<State> => {
-            const conversation_uuid = state.conversation_uuid
-            const tool_call = toolRegistry.find(t => t.name == state.tool)?.executor!!
+            const call = currentCall(state)!
+            const tool_call = toolRegistry.find(t => t.name === call.tool)?.executor!
 
             const span = langfuseService.startSpan(observation, {name: "act"})
 
-            const document = await tool_call(state.action!!, {conversation_uuid, ...state.tool_payload})
-            console.log(`${state.tool} execution result...\n ${document.text}`)
+            const document = await tool_call(call.action!, {conversation_uuid: state.conversation_uuid, ...call.payload})
+            console.log(`${call.tool} execution result...\n ${document.text}`)
             langfuseService.endSpan(span, {output: document})
 
-
-            const documents = state.documents ?? []
-            documents.push(document)
-
-            return {...state, documents}
+            return produce(state, draft => {
+                draft.documents.push(document)
+            })
         },
 
         process: async (state: State, trace: LangfuseTraceClient): Promise<State> => {
@@ -89,18 +98,20 @@ function createAiService() {
 
                 newState = await aiService.think(newState, span)
 
-                console.log("Thinking result is ...: ", newState.tool)
+                const call = currentCall(newState)
+                console.log("Thinking result is ...: ", call?.tool)
 
-                if (newState.tool === "answer") {
+                if (call?.tool === "answer") {
                     span.end()
                     break
                 }
 
                 newState = await aiService.use(newState, span)
 
-                console.log("Use result: ", newState.tool, newState.tool_payload)
+                const updatedCall = currentCall(newState)
+                console.log("Use result: ", updatedCall?.tool, updatedCall?.payload)
 
-                if (newState.tool_payload) {
+                if (updatedCall?.payload) {
                     newState = await aiService.act(newState, span)
                 }
 
