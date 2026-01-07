@@ -54,7 +54,7 @@ function createAiService() {
             }
 
             const generation = langfuseService.startGeneration(observation, {
-                name: "use",
+                name: `use ${currentCall(state)?.tool}`,
                 model: modelId,
                 input: completionConfig.messages
             })
@@ -76,7 +76,7 @@ function createAiService() {
             const call = currentCall(state)!
             const tool_call = toolRegistry.find(t => t.name === call.tool)?.executor!
 
-            const span = langfuseService.startSpan(observation, {name: "act"})
+            const span = langfuseService.startSpan(observation, {name: currentCall(state)?.action ?? 'act'})
 
             const document = await tool_call(call.action!, {conversation_uuid: state.conversation_uuid, ...call.payload})
             console.log(`${call.tool} execution result...\n ${document.text}`)
