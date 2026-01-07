@@ -20,7 +20,11 @@ ai.post("/chat", async (c: Context) => {
 
     const state: State = {
         conversation_uuid: conversation_uuid,
-        messages: body.messages
+        messages: body.messages,
+        step: 1,
+        max_steps: 5,
+        documents: [],
+        call_stack: []
     }
 
     const newState = await aiService.process(state, trace);

@@ -28,13 +28,21 @@ export interface ThoughtsResponse {
     result: Thoughts
 }
 
+export interface ToolCall {
+    tool: string,
+    action?: string,
+    payload?: Record<string, any>
+}
+
 export interface State {
     conversation_uuid: string;
     messages: CoreMessage[]
-    thinking?: string,
-    tool?: string
-    next?: string,
-    action?: string
-    tool_payload?: Record<string, any>
-    documents?: Document[],
+    step: number,
+    max_steps: number,
+    thoughts?: {
+        next_action?: string
+        next_action_reasoning?: string
+    },
+    documents: Document[],
+    call_stack: ToolCall[],
 }
