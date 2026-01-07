@@ -62,10 +62,17 @@ const logbookService = {
             case 'read_dives': {
                 const {conversation_uuid, limit} = readDivesLogbookSchema.parse(payload);
 
-                const content = `The last 2 dives are:
-                    1. Ko Lanta in Thailand on max depth of 25 meters, with 53 minutes underwater
-                    2. Ko Ha, 18,9m and 44 min underwater
-                `;
+                const result = await fetch("https://marcin318-20318.wykr.es/webhook/7d179e22-792f-49f2-bc48-573493256291", {
+                    method: "POST",
+                    body: JSON.stringify({limit: limit}),
+                    headers: {
+                        "Content-Type": "application/json",
+                    }
+                })
+
+                const content = `The last ${limit} dives are:
+                   ${JSON.stringify(result)}
+                `.trim();
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
