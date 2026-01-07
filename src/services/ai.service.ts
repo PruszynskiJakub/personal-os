@@ -1,11 +1,11 @@
-import type {CoreMessage} from "ai";
-import {toolRegistry} from "../config/tools.config.ts";
-import {prompt as thinkPrompt} from "../prompts/agent.think.ts";
-import {prompt as usePrompt} from "../prompts/agent.use.ts";
-import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
-import {langfuseService} from "./langfuse.service.ts";
-import {completion, modelId} from "./llm.service.ts";
-import type {LangfuseSpanClient, LangfuseTraceClient} from "langfuse";
+import type { CoreMessage } from "ai";
+import type { LangfuseSpanClient, LangfuseTraceClient } from "langfuse";
+import { toolRegistry } from "../config/tools.config.ts";
+import { prompt as thinkPrompt } from "../prompts/agent.think.ts";
+import { prompt as usePrompt } from "../prompts/agent.use.ts";
+import type { State, ThoughtsResponse, ToolUseResponse } from "../types/agent.ts";
+import { langfuseService } from "./langfuse.service.ts";
+import { completion, modelId } from "./llm.service.ts";
 
 function createAiService() {
 
