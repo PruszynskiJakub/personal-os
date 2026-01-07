@@ -38,7 +38,7 @@ const uploadAttachment = async (data: string) => {
         original_name: 'image.jpeg'
     })
 
-    // return `http:localhost:3000/api/files/${result.uuid}`
+    // return `${process.env.APP_URL}/api/files/${result.uuid}`
     return data
 }
 
