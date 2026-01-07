@@ -1,14 +1,14 @@
-import type { CoreMessage } from "ai";
-import { produce } from "immer";
-import type { LangfuseSpanClient, LangfuseTraceClient } from "langfuse";
-import { toolRegistry } from "../config/tools.config.ts";
-import { prompt as thinkPrompt } from "../prompts/agent.think.ts";
-import { prompt as usePrompt } from "../prompts/agent.use.ts";
-import type { State, ThoughtsResponse, ToolUseResponse } from "../types/agent.ts";
-import { langfuseService } from "./langfuse.service.ts";
-import { completion, modelId } from "./llm.service.ts";
+import type {CoreMessage} from "ai";
+import {produce} from "immer";
+import type {LangfuseSpanClient, LangfuseTraceClient} from "langfuse";
+import {toolRegistry} from "../config/tools.config.ts";
+import {prompt as thinkPrompt} from "../prompts/agent.think.ts";
+import {prompt as usePrompt} from "../prompts/agent.use.ts";
+import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
+import {langfuseService} from "./langfuse.service.ts";
+import {completion, modelId} from "./llm.service.ts";
+import {currentCall} from "../utils/agent.ts";
 
-const currentCall = (state: State) => state.call_stack.at(-1)
 
 function createAiService() {
 
@@ -36,7 +36,7 @@ function createAiService() {
             console.log("thinking result..", result)
 
             return produce(state, draft => {
-                draft.call_stack.push({ tool: result.result.tool })
+                draft.call_stack.push({tool: result.result.tool})
                 draft.thoughts = {}
                 draft.thoughts.next_action = result.result.description
                 draft.thoughts.next_action_reasoning = result.result._thinking
@@ -99,7 +99,6 @@ function createAiService() {
                 newState = await aiService.think(newState, span)
 
                 const call = currentCall(newState)
-                console.log("Thinking result is ...: ", call?.tool)
 
                 if (call?.tool === "answer") {
                     span.end()

@@ -1,17 +1,19 @@
 import {toolRegistry} from "../config/tools.config.ts";
 import type {State} from "../types/agent.ts";
+import {currentCall} from "../utils/agent.ts";
 
 const prompt = (state: State): string => {
-    const tool_actions = toolRegistry.find(t => t.name === state.tool);
+    const current_call = currentCall(state)!!
+    const tool_actions = toolRegistry.find(t => t.name === current_call.tool);
 
     return `
-    You decided to use ${state.tool}.
+    You decided to use ${current_call.tool}.
     Now it's time to choose the most fitting action and generate payload for it.
     You MUST choose only single action. Do it carefully based on your own thoughts. 
     You are working in the loop.
     
     Today is ${new Date().toISOString()}.
-    Your thoughts ${state.next}.
+    Your thoughts ${state.thoughts?.next_action}.
     
     Return JSON object:
     {
