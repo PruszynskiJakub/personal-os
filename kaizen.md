@@ -1,1 +1,1 @@
-Usprawnienia promptów, zwracanie wszystkich plików prawidłowo
+Usprawnienia promptów
