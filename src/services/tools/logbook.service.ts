@@ -70,8 +70,10 @@ const logbookService = {
                     }
                 })
 
+                console.log(result)
+
                 const content = `The last ${limit} dives are:
-                   ${JSON.stringify(result)}
+                   ${await result.text()}
                 `.trim();
 
                 return documentService.createDocument({
