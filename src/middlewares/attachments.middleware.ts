@@ -13,7 +13,7 @@ const BaseMessageContent = z.union([
             text: z.string().optional(),
             data: z.string().optional(),
             image: z.string().optional(),
-            mediaType: z.string().optional(),
+            mimeType: z.string().optional(),
         })
     )
 ]);
@@ -28,7 +28,7 @@ const RequestSchema = z.object({
     stream: z.boolean().optional(),
 })
 
-const uploadAttachment = async (data: string, mediaType: "image/jpeg") => {
+const uploadAttachment = async (data: string, mediaType: string) => {
     if (data.startsWith("http")) return data;
 
     const split = mediaType.split("/")
@@ -57,8 +57,13 @@ const processMultipartMessage = async (message: any): Promise<CoreMessage> => {
     const processed_message = await Promise.all(
         message.content.map(async (part: ImagePart | TextPart | FilePart) => {
             if (part.type === "image") {
-                const url = await uploadAttachment(part.image as string, "image/jpeg");
-                return {type: 'image', 'image': url} as ImagePart
+                const url = await uploadAttachment(part.image as string, part.mimeType ?? 'image/jpeg');
+                return {type: 'image', 'image': url, mimeType: part.mimeType} as ImagePart
+            }
+
+            if (part.type === "file") {
+                const url = await uploadAttachment(part.data as string, part.mimeType);
+                return {type: 'file', 'data': url, mimeType: part.mimeType} as FilePart
             }
 
             return part as TextPart | FilePart
