@@ -92,6 +92,7 @@ function createAiService() {
             let newState: State = state
 
             while (true) {
+                console.log(`starting ${step}..`)
                 const span = langfuseService.startSpan(trace, {name: `step ${step}`})
                 step++
 
@@ -101,6 +102,7 @@ function createAiService() {
 
                 if (call?.tool === "answer") {
                     span.end()
+                    console.log(`ending ${step}..`)
                     break
                 }
 
@@ -114,6 +116,7 @@ function createAiService() {
                 }
 
                 span.end()
+                console.log(`ending ${step}..`)
             }
 
 

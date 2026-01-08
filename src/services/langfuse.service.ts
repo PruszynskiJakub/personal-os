@@ -75,6 +75,10 @@ function createLangfuseService(langfuse: Langfuse) {
             })
         },
 
+        async flush()  {
+            await langfuse.flushAsync()
+        },
+
         async shutdown() {
             await langfuse.shutdownAsync();
         }
