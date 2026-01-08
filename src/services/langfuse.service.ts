@@ -17,11 +17,11 @@ function createLangfuseService(langfuse: Langfuse) {
 
     return {
         getTextPrompt: async (name: string, label: string = 'production', version?: number): Promise<TextPromptClient> => {
-            return await langfuse.getPrompt(name, version, {type: 'text', label: label});
+            return langfuse.getPrompt(name, version, {type: 'text', label: label});
         },
 
         getChatPrompt: async (name: string, label: string = 'production', version?: number): Promise<ChatPromptClient> => {
-            return await langfuse.getPrompt(name, version, {type: 'chat', label: label})
+            return langfuse.getPrompt(name, version, {type: 'chat', label: label})
         },
 
         initializeTrace: (body: { name: string, session_id: string }): LangfuseTraceClient => {
