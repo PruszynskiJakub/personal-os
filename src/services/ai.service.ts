@@ -92,9 +92,12 @@ function createAiService() {
             let newState: State = state
 
             while (true) {
-                console.log(`starting ${step}..`)
-                const span = langfuseService.startSpan(trace, {name: `step ${step}`})
-                step++
+                console.log(`starting ${newState.step}..`)
+                const span = langfuseService.startSpan(trace, {name: `step ${newState.step}`})
+
+                newState = produce(newState, draft => {
+                    draft.step = draft.step + 1
+                })
 
                 newState = await aiService.think(newState, span)
 
@@ -102,7 +105,7 @@ function createAiService() {
 
                 if (call?.tool === "answer") {
                     span.end()
-                    console.log(`ending ${step}..`)
+                    console.log(`ending ${newState.step}..`)
                     break
                 }
 
@@ -116,7 +119,7 @@ function createAiService() {
                 }
 
                 span.end()
-                console.log(`ending ${step}..`)
+                console.log(`ending ${newState.step}..`)
             }
 
 
