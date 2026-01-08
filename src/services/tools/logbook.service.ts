@@ -47,8 +47,6 @@ const logbookService = {
                     }
                 })
 
-                console.log(result)
-
                 const content = `
                 Created ${dives.length} dives
                 Dive details ${JSON.stringify(dives)}
@@ -69,8 +67,6 @@ const logbookService = {
                         "Content-Type": "application/json",
                     }
                 })
-
-                console.log(result)
 
                 const content = `The last ${limit} dives are:
                    ${await result.text()}
