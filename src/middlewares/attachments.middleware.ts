@@ -13,6 +13,7 @@ const BaseMessageContent = z.union([
             text: z.string().optional(),
             data: z.string().optional(),
             image: z.string().optional(),
+            mediaType: z.string().optional(),
         })
     )
 ]);
@@ -27,15 +28,16 @@ const RequestSchema = z.object({
     stream: z.boolean().optional(),
 })
 
-const uploadAttachment = async (data: string) => {
+const uploadAttachment = async (data: string, mediaType: "image/jpeg") => {
     if (data.startsWith("http")) return data;
 
-    const base64Data = data.startsWith('data:') ? data : `data:image/jpeg;base64,${data}`;
+    const split = mediaType.split("/")
+    const base64Data = data.startsWith('data:') ? data : `data:${mediaType};base64,${data}`;
 
     const result = await uploadFile({
         uuid: uuidv4(),
-        file: {base64: base64Data, mime_type: 'image/jpeg'},
-        original_name: 'image.jpeg'
+        file: {base64: base64Data, mime_type: mediaType},
+        original_name: `attachment.${split[1]}`,
     })
 
     // return `${process.env.APP_URL}/api/files/${result.uuid}`
@@ -44,7 +46,7 @@ const uploadAttachment = async (data: string) => {
 
 const processMultipartMessage = async (message: any): Promise<CoreMessage> => {
     const hasMultipartContent = Array.isArray(message.content)
-    const hasFileOrImageContent = hasMultipartContent && message.content.some((part: ImagePart | TextPart | FilePart) => {
+    const hasNonTextContent = hasMultipartContent && message.content.some((part: ImagePart | TextPart | FilePart) => {
         return part.type === "image" || part.type === "file"
     });
 
@@ -55,9 +57,10 @@ const processMultipartMessage = async (message: any): Promise<CoreMessage> => {
     const processed_message = await Promise.all(
         message.content.map(async (part: ImagePart | TextPart | FilePart) => {
             if (part.type === "image") {
-                const url = await uploadAttachment(part.image as string)
+                const url = await uploadAttachment(part.image as string, "image/jpeg");
                 return {type: 'image', 'image': url} as ImagePart
             }
+
             return part as TextPart | FilePart
         })
     );
