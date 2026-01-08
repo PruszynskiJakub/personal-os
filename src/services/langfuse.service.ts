@@ -1,6 +1,7 @@
 import {Langfuse, type LangfuseGenerationClient, type LangfuseSpanClient, type LangfuseTraceClient} from 'langfuse';
 import {v4 as uuidv4} from 'uuid';
 import type {CoreMessage} from "ai";
+import {ChatPromptClient, TextPromptClient} from "langfuse-core";
 
 const langfuse = new Langfuse({
     secretKey: process.env.LANGFUSE_SECRET_KEY,
@@ -15,6 +16,14 @@ langfuse.on('error', (error: Error) => {
 function createLangfuseService(langfuse: Langfuse) {
 
     return {
+        getTextPrompt: async (name: string, label: string = 'production', version?: number): Promise<TextPromptClient> => {
+            return await langfuse.getPrompt(name, version, {type: 'text', label: label});
+        },
+
+        getChatPrompt: async (name: string, label: string = 'production', version?: number): Promise<ChatPromptClient> => {
+            return await langfuse.getPrompt(name, version, {type: 'chat', label: label})
+        },
+
         initializeTrace: (body: { name: string, session_id: string }): LangfuseTraceClient => {
             return langfuse.trace({
                 id: uuidv4(),
@@ -32,7 +41,7 @@ function createLangfuseService(langfuse: Langfuse) {
             })
         },
 
-        endSpan: (span: LangfuseSpanClient, body: {output: unknown}) => {
+        endSpan: (span: LangfuseSpanClient, body: { output: unknown }) => {
             span.end({
                 output: body.output
             })
