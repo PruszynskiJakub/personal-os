@@ -3,6 +3,16 @@ import {v4 as uuidv4} from 'uuid';
 import type {CoreMessage} from "ai";
 import {ChatPromptClient, TextPromptClient} from "langfuse-core";
 
+// const GenerationInputSchema = z.object({
+//   name: z.string(),
+//   input: z.unknown(),
+//   output: z.unknown().optional(),
+//   metadata: z.record(z.unknown()).optional(),
+//   level: z.enum(['DEBUG', 'DEFAULT', 'WARNING', 'ERROR']).optional(),
+//   statusMessage: z.string().optional()
+// });
+
+
 const langfuse = new Langfuse({
     secretKey: process.env.LANGFUSE_SECRET_KEY,
     publicKey: process.env.LANGFUSE_PUBLIC_KEY,
@@ -34,16 +44,18 @@ function createLangfuseService(langfuse: Langfuse) {
         },
 
         startSpan: (observation: LangfuseSpanClient | LangfuseTraceClient, body: {
-            name: string
+            name: string,
+            input?: any
         }): LangfuseSpanClient => {
             return observation.span({
                 name: body.name,
             })
         },
 
-        endSpan: (span: LangfuseSpanClient, body: { output: unknown }) => {
+        endSpan: (span: LangfuseSpanClient, body: { output: unknown, metadata?: {} }) => {
             span.end({
-                output: body.output
+                output: body.output,
+                metadata: body.metadata
             })
         },
 
@@ -75,7 +87,7 @@ function createLangfuseService(langfuse: Langfuse) {
             })
         },
 
-        async flush()  {
+        async flush() {
             await langfuse.flushAsync()
         },
 
