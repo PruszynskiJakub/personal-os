@@ -40,8 +40,7 @@ const uploadAttachment = async (data: string, mediaType: string) => {
         original_name: `attachment.${split[1]}`,
     })
 
-    // return `${process.env.APP_URL}/api/files/${result.uuid}`
-    return data
+    return `${process.env.APP_URL}/api/files/${result.uuid}`
 }
 
 const processMultipartMessage = async (message: any): Promise<CoreMessage> => {
