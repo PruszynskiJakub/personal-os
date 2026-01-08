@@ -9,7 +9,6 @@ import {langfuseService} from "./langfuse.service.ts";
 import {completion, modelId} from "./llm.service.ts";
 import {currentCall} from "../utils/agent.ts";
 
-
 function createAiService() {
 
     return {

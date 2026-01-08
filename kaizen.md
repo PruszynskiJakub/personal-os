@@ -1,1 +1,3 @@
 Usprawnienia promptów
+Usprawnić treść dokumentów
+Usprawnić logowanie
