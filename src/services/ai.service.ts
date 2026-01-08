@@ -75,7 +75,10 @@ function createAiService() {
             const call = currentCall(state)!
             const tool_call = toolRegistry.find(t => t.name === call.tool)?.executor!
 
-            const span = langfuseService.startSpan(observation, {name: currentCall(state)?.action ?? 'act'})
+            const span = langfuseService.startSpan(observation, {
+                name: currentCall(state)?.action ?? 'act',
+                input: call
+            })
 
             const document = await tool_call(call.action!, {conversation_uuid: state.conversation_uuid, ...call.payload})
             console.log(`${call.tool} execution result...\n ${document.text}`)
