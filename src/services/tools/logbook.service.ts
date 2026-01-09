@@ -47,7 +47,7 @@ const logbookService = {
                     }
                 })
 
-                const content = `
+                const document_text = `
                 Recorded ${dives.length} new dives.
                 Their details:
                 ${dives.map((dive, index) => {
@@ -57,7 +57,7 @@ const logbookService = {
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
-                    text: content
+                    text: document_text
                 })
             }
             case 'read_dives': {
@@ -74,14 +74,14 @@ const logbookService = {
                 const result = await response.json()
                 const dives = result['dives'] as [{ spot: string, max_depth: number, duration: number, date: string }]
 
-                const content = `Your last ${limit} dives are:
+                const document_text = `Your last ${limit} dives are:
                    ${dives.map((dive, index) => {
                     `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth} and duration: ${dive.duration}`.trim()
                 }).join("\n")}`
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
-                    text: content
+                    text: document_text
                 })
             }
         }
