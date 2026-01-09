@@ -51,7 +51,7 @@ const logbookService = {
                 Recorded ${dives.length} new dives.
                 Their details:
                 ${dives.map((dive, index) => {
-                    return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth} and duration: ${dive.duration}`.trim()
+                    return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth}m and duration: ${dive.duration}min`.trim()
                 }).join('\n')}
                 `
 
@@ -76,7 +76,7 @@ const logbookService = {
 
                 const document_text = `Your last ${limit} dives are:
                    ${dives.map((dive, index) => {
-                    return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth} and duration: ${dive.duration}`.trim()
+                    return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth}m and duration: ${dive.duration} min`.trim()
                 }).join("\n")}`
 
                 return documentService.createDocument({

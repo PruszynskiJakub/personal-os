@@ -62,7 +62,7 @@ function createAiService() {
 
             langfuseService.endGeneration(generation, {output: result})
 
-            console.log("🧰Use result ", result)
+            console.log("🧰 Use result ", result)
 
             return produce(state, draft => {
                 const call = draft.call_stack.at(-1)!
@@ -93,8 +93,8 @@ function createAiService() {
 
             let newState: State = state
 
-            while (true) {
-                console.log(`🔁Starting step #${newState.step}`)
+            while (newState.step < newState.max_steps) {
+                console.log(`🔁 Starting step #${newState.step}`)
                 const span = langfuseService.startSpan(trace, {name: `step ${newState.step}`})
 
                 newState = produce(newState, draft => {
