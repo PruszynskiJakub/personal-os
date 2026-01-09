@@ -1,3 +1,3 @@
 Usprawnienia promptów
-Usprawnić treść dokumentów
-Usprawnić logowanie
+Usprawnić logowanie do konsoli
+Zwracać dokumenty błędu w logbook service

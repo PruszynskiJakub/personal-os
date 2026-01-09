@@ -19,6 +19,18 @@ function createDocumentService() {
                 created_at: now,
                 updated_at: now,
             }
+        },
+
+        async createErrorDocument(params: {
+            conversation_uuid: string,
+            error: Error,
+            error_context: string,
+        }): Promise<Document> {
+
+            return documentService.createDocument({
+                conversation_uuid: params.conversation_uuid,
+                text: `Error ${params.error.message}.\n Error Context: ${params.error_context}`
+            })
         }
     }
 }
