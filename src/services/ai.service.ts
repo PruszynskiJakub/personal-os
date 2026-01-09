@@ -97,10 +97,6 @@ function createAiService() {
                 console.log(`🔁 Starting step #${newState.step}`)
                 const span = langfuseService.startSpan(trace, {name: `step ${newState.step}`})
 
-                newState = produce(newState, draft => {
-                    draft.step = draft.step + 1
-                })
-
                 newState = await aiService.think(newState, span)
 
                 const call = currentCall(newState)
@@ -120,6 +116,10 @@ function createAiService() {
                 }
 
                 span.end()
+
+                newState = produce(newState, draft => {
+                    draft.step = draft.step + 1
+                })
                 console.log(`🔁Step #${newState.step} completed`)
             }
 
