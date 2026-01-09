@@ -14,7 +14,7 @@ const prompt = (state: State): string => {
     
     <prompt_rules>
     - ALWAYS return a valid JSON object with "result" property strictly complaint with *output_format*.
-    - The "result" MUST be an object with "name", "tool_name" and "task_uuid" properties
+    - The "result" MUST be an object with "_thinking", "tool" and "description" properties
     - The "_thinking" MUST represent your comprehensive internal reasoning process, including analysis of the current situation and justification for the chose next action
     - The "description" MUST be a brief description of an action
     - The "tool" MUST be an exact name of one of the predefined tools
@@ -23,7 +23,7 @@ const prompt = (state: State): string => {
     - ENSURE the chosen action is directly relevant to advancing conversation or adressing the user's needs
     - If no action is need, explain why is that in "_thinking" and set "tool" to 'final_answer'
     - MUST analyze the *documents* to see what has already been accomplished
-    - Must take into account your previous decisions and their outcomes
+    - MUST take into account your previous decisions and their outcomes
     </prompt_rules>
 
     <output_format>
