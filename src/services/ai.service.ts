@@ -101,7 +101,7 @@ function createAiService() {
 
                 const call = currentCall(newState)
 
-                if (call?.tool === "answer") {
+                if (call?.tool === "final_answer") {
                     span.end()
                     console.log(`🔁Step #${newState.step} completed`)
                     break
