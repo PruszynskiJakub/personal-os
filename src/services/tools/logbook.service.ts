@@ -48,9 +48,12 @@ const logbookService = {
                 })
 
                 const content = `
-                Created ${dives.length} dives
-                Dive details ${JSON.stringify(dives)}
-                `.trim();
+                Recorded ${dives.length} new dives.
+                Their details:
+                ${dives.map((dive, index) => {
+                    `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth} and duration: ${dive.duration}`.trim()
+                }).join('\n')}
+                `
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
@@ -60,7 +63,7 @@ const logbookService = {
             case 'read_dives': {
                 const {conversation_uuid, limit} = readDivesLogbookSchema.parse(payload);
 
-                const result = await fetch("https://marcin318-20318.wykr.es/webhook/7d179e22-792f-49f2-bc48-573493256291", {
+                const response = await fetch("https://marcin318-20318.wykr.es/webhook/7d179e22-792f-49f2-bc48-573493256291", {
                     method: "POST",
                     body: JSON.stringify({limit: limit}),
                     headers: {
@@ -68,9 +71,13 @@ const logbookService = {
                     }
                 })
 
-                const content = `The last ${limit} dives are:
-                   ${await result.text()}
-                `.trim();
+                const result = await response.json()
+                const dives = result['dives'] as [{ spot: string, max_depth: number, duration: number, date: string }]
+
+                const content = `Your last ${limit} dives are:
+                   ${dives.map((dive, index) => {
+                    `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth} and duration: ${dive.duration}`.trim()
+                }).join("\n")}`
 
                 return documentService.createDocument({
                     conversation_uuid: conversation_uuid,
