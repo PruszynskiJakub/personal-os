@@ -7,7 +7,7 @@ import {prompt as usePrompt} from "../prompts/agent.use.ts";
 import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
 import {langfuseService} from "./langfuse.service.ts";
 import {completion, modelId} from "./llm.service.ts";
-import {currentCall} from "../utils/agent.ts";
+import {currentCall, lastUserMessage} from "../utils/agent.ts";
 
 function createAiService() {
 
@@ -16,7 +16,7 @@ function createAiService() {
             const completionConfig = {
                 messages: [
                     {role: "system", content: thinkPrompt(state)},
-                    ...state.messages
+                    lastUserMessage(state)
                 ] as CoreMessage[],
                 temperature: 0,
                 max_tokens: 4000
@@ -46,7 +46,7 @@ function createAiService() {
             const completionConfig = {
                 messages: [
                     {role: "system", content: usePrompt(state)},
-                    ...state.messages
+                    lastUserMessage(state)
                 ] as CoreMessage[],
                 temperature: 0,
                 max_tokens: 4000
