@@ -26,7 +26,7 @@ const prompt = (state: State): string => {
     <documents>
     ${state.documents?.map(document => `
         <document uuid="${document.uuid}">
-            ${document.text}
+        ${document.text}
         </document>
     `) }
     </documents>
