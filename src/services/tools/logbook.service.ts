@@ -39,7 +39,7 @@ const logbookService = {
             case 'add_dive': {
                 const {conversation_uuid, dives} = addDiveLogbookSchema.parse(payload);
 
-                const result = await fetch("https://marcin318-20318.wykr.es/webhook/d0881779-afed-4dd2-85ad-713d9b67b4e3", {
+                const response = await fetch("https://marcin318-20318.wykr.es/webhook/d0881779-afed-4dd2-85ad-713d9b67b4e3", {
                     method: "POST",
                     body: JSON.stringify({dives: dives}),
                     headers: {
@@ -47,18 +47,25 @@ const logbookService = {
                     }
                 })
 
-                const document_text = `
-                Recorded ${dives.length} new dives.
-                Their details:
-                ${dives.map((dive, index) => {
-                    return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth}m and duration: ${dive.duration}min`.trim()
-                }).join('\n')}
+                if (response.ok) {
+                    const document_text = `Recorded ${dives.length} new dives.
+                        Their details:
+                        ${dives.map((dive, index) => {
+                        return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth}m and duration: ${dive.duration}min`.trim()
+                    }).join('\n')}
                 `
 
-                return documentService.createDocument({
-                    conversation_uuid: conversation_uuid,
-                    text: document_text
-                })
+                    return documentService.createDocument({
+                        conversation_uuid: conversation_uuid,
+                        text: document_text
+                    })
+                } else {
+                    return documentService.createErrorDocument({
+                        conversation_uuid: conversation_uuid,
+                        error: response.statusText,
+                        error_context: "Failed to add new dives to the logbook.",
+                    })
+                }
             }
             case 'read_dives': {
                 const {conversation_uuid, limit} = readDivesLogbookSchema.parse(payload);
@@ -70,19 +77,31 @@ const logbookService = {
                         "Content-Type": "application/json",
                     }
                 })
+                if (response.ok) {
+                    const result = await response.json()
+                    const dives = result['result'] as [{
+                        spot: string,
+                        max_depth: number,
+                        duration: number,
+                        date: string
+                    }]
 
-                const result = await response.json()
-                const dives = result['result'] as [{ spot: string, max_depth: number, duration: number, date: string }]
-
-                const document_text = `Your last ${limit} dives are:
+                    const document_text = `Your last ${limit} dives are:
                    ${dives.map((dive, index) => {
-                    return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth}m and duration: ${dive.duration} min`.trim()
-                }).join("\n")}`
+                        return `${index}. On ${dive.date} at ${dive.spot} on max depth: ${dive.max_depth}m and duration: ${dive.duration} min`.trim()
+                    }).join("\n")}`
 
-                return documentService.createDocument({
-                    conversation_uuid: conversation_uuid,
-                    text: document_text
-                })
+                    return documentService.createDocument({
+                        conversation_uuid: conversation_uuid,
+                        text: document_text
+                    })
+                } else {
+                    return documentService.createErrorDocument({
+                        conversation_uuid: conversation_uuid,
+                        error: response.statusText,
+                        error_context: `Failed to read last ${limit} dives from the logbook.`,
+                    })
+                }
             }
         }
     }

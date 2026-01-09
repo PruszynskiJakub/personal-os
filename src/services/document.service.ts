@@ -23,13 +23,14 @@ function createDocumentService() {
 
         async createErrorDocument(params: {
             conversation_uuid: string,
-            error: Error,
+            error: any,
             error_context: string,
         }): Promise<Document> {
+            const error_message = params.error instanceof Error ? params.error.message : "Unknown error"
 
             return documentService.createDocument({
                 conversation_uuid: params.conversation_uuid,
-                text: `Error ${params.error.message}.\n Error Context: ${params.error_context}`
+                text: `Error ${error_message}.\n Error Context: ${params.error_context}`
             })
         }
     }
