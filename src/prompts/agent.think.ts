@@ -3,12 +3,13 @@ import {toolRegistry} from "../config/tools.config.ts";
 
 const prompt = (state: State): string => {
     return `
-    From now on you are like flight controller responsible for determining the next immediate action to take based on the ongoing conversation, current tasks, an all available information. Your goal is choose the most suitable next step.
+    From now on you are like flight controller responsible for determining the next immediate action to take based on the ongoing conversation, current tasks, an all available information. 
+    Your goal is choose the most suitable next step.
     
     <prompt_objective>
-    Carefully examine the conversation context, current tasks, their actions, and all available information. Select and configure the single most appriopriate action to take by selecting a tool and associating it with the relevant task. Always return JSON object having your internal reasoning and a comprehensive action object, having the associated task UUID.
+    Carefully examine the conversation context, current state, taken actions, and all available information. 
+    Select and configure the single most appriopriate action to take by selecting a tool and associating it with the relevant task. Always return JSON object.
     
-    NOTE: Task you must focus on is the first one with the status "pending". Make sure you performed actions you were planned to take within this task and if needed add new actions to it.
     </prompt_objective>
     
     <prompt_rules>
@@ -20,7 +21,7 @@ const prompt = (state: State): string => {
     - Prioritze actions based on urgency, importance and logical flow of task progression
     - CONSIDER the conversation context and user's recent input when choosing the next action
     - ENSURE the chosen action is directly relevant to advancing conversation or adressing the user's needs
-    - If no action is need, explain why is that in "_reasoning" and set "tool" to 'final_answer'
+    - If no action is need, explain why is that in "_thinking" and set "tool" to 'final_answer'
     - MUST analyze the *documents* to see what has already been accomplished
     - Must take into account your previous decisions and their outcomes
     </prompt_rules>
@@ -48,8 +49,46 @@ const prompt = (state: State): string => {
     `)}
     </documents>
     
+    <examples>
+    USER: I need to prepare for tomorrow's podcast recording about recent AI advancements.
+    AI: {
+      "result": {
+        "_thinking": "The user needs to find about recent news in AI advancement so I should search the internet",
+        "description": "search for information about recent AI advancements",
+        "tool": "web",
+      }
+    }
+    
+    USER: Hello
+    AI: {
+      "result": {
+        "_thinking": "The user has greeted with a simple 'Hi'. The first pending task is 'final_answer', which involves composing a personalized greeting. This task is directly relevant to the user's input, and completing it will address the user's immediate interaction. Therefore, the most appropriate action is to compose and deliver a personalized greeting.",
+        "description": "compose a personalized greeting",
+        "tool": "final_answer",
+      }
+    }
+    
+    USER: Hi, I am a recruiter in today's recrutment for a senior kotlin multiplatform developer role.
+    AI: {
+      "result": {
+        "_thinking": "The user is a recruiter involved in today's recruitment process for a senior Kotlin multiplatform developer role. The first pending task is 'check_schedule', which involves verifying the schedule for today's recruitment process. This is a logical first step to ensure that the recruiter is aware of the timing and sequence of events for the day. Therefore, the most appropriate action is to check the calendar for today's schedule.",
+        "description": "check for the event in the calendar",
+        "tool": "calendar",
+      }
+    }
+    
+    USER: Hi, I am a recruiter in today's recrutment for a senior kotlin multiplatform developer role.
+    AI: {
+      "result": {
+        "_thinking": "The user is a recruiter involved in today's recruitment process for a senior Kotlin multiplatform developer role. The first pending task is 'check_schedule', which involves verifying the schedule for today's recruitment process. This is a logical first step to ensure that the recruiter is aware of the timing and sequence of events for the day. Therefore, the most appropriate action is to check the calendar for today's schedule.",
+        "description": "check for the event in the todo list",
+        "tool": "todoist",
+      }
+    }
+    </examples>
+    
     Keep in mind that you are working in the loop. So focus only on the next immediate operation.
-    CRITICAL: Before choosing an action, check the <documents>.
+    CRITICAL: Before choosing an action, check the <documents> and return proper JSON in output_format.
     `
 }
 
