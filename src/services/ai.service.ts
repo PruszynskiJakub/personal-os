@@ -23,7 +23,7 @@ function createAiService() {
             }
 
             const generation = langfuseService.startGeneration(observation, {
-                name: "think",
+                name: `thinking #${state.step}`,
                 model: modelId,
                 input: completionConfig.messages
             })
@@ -62,7 +62,7 @@ function createAiService() {
 
             langfuseService.endGeneration(generation, {output: result})
 
-            console.log("use result..", result)
+            console.log("🧰Use result ", result)
 
             return produce(state, draft => {
                 const call = draft.call_stack.at(-1)!
@@ -81,7 +81,7 @@ function createAiService() {
             })
 
             const document = await tool_call(call.action!, {conversation_uuid: state.conversation_uuid, ...call.payload})
-            console.log(`${call.tool} execution result...\n ${document.text}`)
+            console.log(`⚙️${call.tool}, ${call.action} execution result.\n ${document.text}`)
             langfuseService.endSpan(span, {output: document})
 
             return produce(state, draft => {
@@ -91,11 +91,10 @@ function createAiService() {
 
         process: async (state: State, trace: LangfuseTraceClient): Promise<State> => {
 
-            let step = 1
             let newState: State = state
 
             while (true) {
-                console.log(`starting ${newState.step}..`)
+                console.log(`🔁Starting step #${newState.step}`)
                 const span = langfuseService.startSpan(trace, {name: `step ${newState.step}`})
 
                 newState = produce(newState, draft => {
@@ -108,21 +107,20 @@ function createAiService() {
 
                 if (call?.tool === "answer") {
                     span.end()
-                    console.log(`ending ${newState.step}..`)
+                    console.log(`🔁Step #${newState.step} completed`)
                     break
                 }
 
                 newState = await aiService.use(newState, span)
 
                 const updatedCall = currentCall(newState)
-                console.log("Use result: ", updatedCall?.tool, updatedCall?.payload)
 
                 if (updatedCall?.payload) {
                     newState = await aiService.act(newState, span)
                 }
 
                 span.end()
-                console.log(`ending ${newState.step}..`)
+                console.log(`🔁Step #${newState.step} completed`)
             }
 
 

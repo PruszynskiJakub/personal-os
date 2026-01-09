@@ -72,7 +72,7 @@ const logbookService = {
                 })
 
                 const result = await response.json()
-                const dives = result['dives'] as [{ spot: string, max_depth: number, duration: number, date: string }]
+                const dives = result['result'] as [{ spot: string, max_depth: number, duration: number, date: string }]
 
                 const document_text = `Your last ${limit} dives are:
                    ${dives.map((dive, index) => {
