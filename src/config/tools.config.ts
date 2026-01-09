@@ -2,8 +2,12 @@ import {type LogbookAction, logbookService} from "../services/tools/logbook.serv
 
 export const toolRegistry = [
     {
+      name: 'final_answer',
+      description: 'Use whenever you are ready to respond directly to the user, ask auxiliary question or clarify sth that requires information from the user ',
+    },
+    {
         name: "logbook",
-        description: "Use whenever users wants to register, update or remove diving or climbing records.",
+        description: "Use whenever users wants to register, update, read or remove diving or climbing records.",
         actions: [
             {
                 name: "add_dive",
