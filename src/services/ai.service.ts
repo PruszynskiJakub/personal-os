@@ -32,7 +32,7 @@ function createAiService() {
 
             langfuseService.endGeneration(generation, {output: result})
 
-            console.log("thinking result..", result)
+            console.log("🧠 Thinking result ", result)
 
             return produce(state, draft => {
                 draft.call_stack.push({tool: result.result.tool})
