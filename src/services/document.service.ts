@@ -30,7 +30,7 @@ function createDocumentService() {
 
             return documentService.createDocument({
                 conversation_uuid: params.conversation_uuid,
-                text: `Error ${error_message}.\n Error Context: ${params.error_context}`
+                text: `Error ${error_message}.\nContext: ${params.error_context}`
             })
         }
     }
