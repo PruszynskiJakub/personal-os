@@ -47,4 +47,6 @@ export const tool_registry = [
     }
 ]
 
-export const formatted_tools = tool_registry.map(tool => `- ${tool.name}: ${tool.description}`).join('\n')
+export const formatted_tools =
+    "- final_answer: Use whenever you are ready to respond directly to the user, ask auxiliary question or clarify sth that requires information from the user ',\n" +
+    tool_registry.map(tool => `- ${tool.name}: ${tool.description}`).join('\n')

@@ -34,7 +34,6 @@ const prompt = (input: { documents: string, tools: string }): string => {
     </output_format>
 
     <available_tools>
-    -final_answer: Use whenever you are ready to respond directly to the user, ask auxiliary question or clarify sth that requires information from the user ',
     ${input.tools}
     </available_tools>
     
