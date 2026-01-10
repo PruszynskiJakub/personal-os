@@ -134,7 +134,6 @@ function createAiService() {
                 })
             }
 
-
             return newState
         }
     }
