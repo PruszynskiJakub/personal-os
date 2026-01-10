@@ -1,6 +1,6 @@
 import {type LogbookAction, logbookService} from "../services/tools/logbook.service.ts";
 
-export const toolRegistry = [
+export const tool_registry = [
     {
         name: "logbook",
         description: "Use whenever users wants to register, update, read or remove diving or climbing records.",
@@ -46,3 +46,5 @@ export const toolRegistry = [
         }
     }
 ]
+
+export const formatted_tools = tool_registry.map(tool => `- ${tool.name}: ${tool.description}`).join('\n')

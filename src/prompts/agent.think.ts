@@ -1,7 +1,4 @@
-import type {State} from "../types/agent.ts";
-import {toolRegistry} from "../config/tools.config.ts";
-
-const prompt = (state: State): string => {
+const prompt = (input: { documents: string, tools: string }): string => {
     return `
     From now on you are like flight controller responsible for determining the next immediate action to take based on the ongoing conversation, current tasks, an all available information. 
     Your goal is choose the most suitable next step.
@@ -38,16 +35,12 @@ const prompt = (state: State): string => {
 
     <available_tools>
     -final_answer: Use whenever you are ready to respond directly to the user, ask auxiliary question or clarify sth that requires information from the user ',
-    ${toolRegistry.map(tool => `- ${tool.name}: ${tool.description}`).join('\n')}
+    ${input.tools}
     </available_tools>
     
     Your recent actions are described by the artifacts below:
     <documents>
-    ${state.documents?.map(document => `
-        <document uuid="${document.uuid}">
-        ${document.text}
-        </document>
-    `)}
+    ${input.documents}
     </documents>
     
     <examples>

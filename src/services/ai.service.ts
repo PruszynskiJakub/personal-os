@@ -1,21 +1,27 @@
 import type {CoreMessage} from "ai";
 import {produce} from "immer";
 import type {LangfuseSpanClient, LangfuseTraceClient} from "langfuse";
-import {toolRegistry} from "../config/tools.config.ts";
+import {formatted_tools, tool_registry} from "../config/tools.config.ts";
 import {prompt as thinkPrompt} from "../prompts/agent.think.ts";
 import {prompt as usePrompt} from "../prompts/agent.use.ts";
 import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
 import {langfuseService} from "./langfuse.service.ts";
 import {completion, modelId} from "./llm.service.ts";
-import {currentCall, lastUserMessage} from "../utils/agent.ts";
+import {currentCall, formatDocuments, lastUserMessage} from "../utils/agent.ts";
 
 function createAiService() {
 
     return {
         think: async (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): Promise<State> => {
+
+            const prompt_input = {
+                tools: formatted_tools,
+                documents: formatDocuments(state)
+            }
+
             const completionConfig = {
                 messages: [
-                    {role: "system", content: thinkPrompt(state)},
+                    {role: "system", content: thinkPrompt(prompt_input)},
                     lastUserMessage(state)
                 ] as CoreMessage[],
                 temperature: 0,
@@ -25,7 +31,7 @@ function createAiService() {
             const generation = langfuseService.startGeneration(observation, {
                 name: `thinking #${state.step}`,
                 model: modelId,
-                input: completionConfig.messages
+                input: prompt_input,
             })
 
             const result = await completion.object<ThoughtsResponse>(completionConfig)
@@ -73,7 +79,7 @@ function createAiService() {
 
         act: async (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): Promise<State> => {
             const call = currentCall(state)!
-            const tool_call = toolRegistry.find(t => t.name === call.tool)?.executor!
+            const tool_call = tool_registry.find(t => t.name === call.tool)?.executor!
 
             const span = langfuseService.startSpan(observation, {
                 name: currentCall(state)?.action ?? 'act',

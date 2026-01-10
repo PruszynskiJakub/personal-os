@@ -1,10 +1,10 @@
-import {toolRegistry} from "../config/tools.config.ts";
+import {tool_registry} from "../config/tools.config.ts";
 import type {State} from "../types/agent.ts";
 import {currentCall} from "../utils/agent.ts";
 
 const prompt = (state: State): string => {
     const current_call = currentCall(state)!!
-    const tool_actions = toolRegistry.find(t => t.name === current_call.tool);
+    const tool_actions = tool_registry.find(t => t.name === current_call.tool);
 
     return `
     You decided to use ${current_call.tool}.
