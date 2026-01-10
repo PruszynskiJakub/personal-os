@@ -49,6 +49,7 @@ function createLangfuseService(langfuse: Langfuse) {
         }): LangfuseSpanClient => {
             return observation.span({
                 name: body.name,
+                input: body,
             })
         },
 

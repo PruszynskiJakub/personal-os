@@ -107,7 +107,7 @@ function createAiService() {
 
             while (newState.step < newState.max_steps) {
                 console.log(`🔁 Starting step #${newState.step}`)
-                const span = langfuseService.startSpan(trace, {name: `step ${newState.step}`})
+                const span = langfuseService.startSpan(trace, {name: `step ${newState.step}`, input: state.documents})
 
                 newState = await aiService.think(newState, span)
 

@@ -46,7 +46,12 @@ ai.post("/chat", async (c: Context) => {
 
     const answer = await completion.text(completionConfig)
 
-    langfuseService.endGeneration(generation, {output: answer})
+    langfuseService.endGeneration(generation, {
+        output: {
+            answer: answer,
+            trajectory: newState.call_stack.map(c => c.tool)
+        }
+    })
 
     langfuseService.finalizeTrace(trace, {messages: body.messages, completion: answer as string})
     langfuseService.flush()
