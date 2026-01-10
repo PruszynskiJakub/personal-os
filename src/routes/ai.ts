@@ -49,7 +49,7 @@ ai.post("/chat", async (c: Context) => {
     langfuseService.endGeneration(generation, {
         output: {
             answer: answer,
-            trajectory: newState.call_stack.map(c => `${c.tool}_${c.action}`)
+            trajectory: newState.call_stack.map(c => `${c.tool}${c.action? `_${c.action}` : ''}`),
         }
     })
 
