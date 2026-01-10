@@ -107,14 +107,22 @@ function createAiService() {
 
             while (newState.step < newState.max_steps) {
                 console.log(`🔁 Starting step #${newState.step}`)
-                const span = langfuseService.startSpan(trace, {name: `step ${newState.step}`, input: state.documents})
+                const span = langfuseService.startSpan(trace, {
+                    name: `step ${newState.step}`, input: {
+                        documents: state.documents
+                    }
+                })
 
                 newState = await aiService.think(newState, span)
 
                 const call = currentCall(newState)
 
                 if (call?.tool === "final_answer") {
-                    span.end()
+                    langfuseService.endSpan(span, {
+                        output: {
+                            documents: state.documents
+                        }
+                    })
                     console.log(`🔁Step #${newState.step} completed`)
                     break
                 }
@@ -127,7 +135,11 @@ function createAiService() {
                     newState = await aiService.act(newState, span)
                 }
 
-                span.end()
+                langfuseService.endSpan(span, {
+                    output: {
+                        documents: state.documents
+                    }
+                })
                 console.log(`🔁Step #${newState.step} completed`)
                 newState = produce(newState, draft => {
                     draft.step = draft.step + 1
