@@ -2,7 +2,6 @@ import type {CoreMessage} from "ai";
 import {produce} from "immer";
 import type {LangfuseSpanClient, LangfuseTraceClient} from "langfuse";
 import {formatted_tools, tool_registry} from "../config/tools.config.ts";
-import {prompt as thinkPrompt} from "../prompts/agent.think.ts";
 import {prompt as usePrompt} from "../prompts/agent.use.ts";
 import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
 import {langfuseService} from "./langfuse.service.ts";
@@ -13,15 +12,18 @@ function createAiService() {
 
     return {
         think: async (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): Promise<State> => {
+            const prompt = await langfuseService.getChatPrompt("think-chat")
 
             const prompt_input = {
                 tools: formatted_tools,
-                documents: formatDocuments(state)
+                documents: formatDocuments(state),
             }
+
+            const compiled_prompt = prompt.compile(prompt_input)
 
             const completionConfig = {
                 messages: [
-                    {role: "system", content: thinkPrompt(prompt_input)},
+                    compiled_prompt[0],
                     lastUserMessage(state)
                 ] as CoreMessage[],
                 temperature: 0,
@@ -31,7 +33,11 @@ function createAiService() {
             const generation = langfuseService.startGeneration(observation, {
                 name: `thinking #${state.step}`,
                 model: modelId,
-                input: prompt_input,
+                input: {
+                    last_user_message: [lastUserMessage(state)],
+                    ...prompt_input
+                },
+                prompt: prompt,
             })
 
             const result = await completion.object<ThoughtsResponse>(completionConfig)
@@ -122,11 +128,10 @@ function createAiService() {
                 }
 
                 span.end()
-
+                console.log(`🔁Step #${newState.step} completed`)
                 newState = produce(newState, draft => {
                     draft.step = draft.step + 1
                 })
-                console.log(`🔁Step #${newState.step} completed`)
             }
 
 

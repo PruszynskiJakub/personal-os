@@ -62,12 +62,14 @@ function createLangfuseService(langfuse: Langfuse) {
         startGeneration: (observation: LangfuseSpanClient | LangfuseTraceClient, body: {
             name: string,
             model: string,
-            input: unknown
+            input: unknown,
+            prompt?: any
         }): LangfuseGenerationClient => {
             return observation.generation({
                 name: body.name,
                 model: body.model,
-                input: body.input
+                input: body.input,
+                prompt: body.prompt
             })
         },
 
