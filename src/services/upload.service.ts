@@ -9,8 +9,26 @@ export const uploadFile = async (input: {
     file: File | Blob | { base64: string, mime_type: string },
     original_name: string
 }): Promise<{ uuid: string, type: 'image' | 'file', path: string }> => {
+    let mime_type: string;
+    if (input.file instanceof Blob || input.file instanceof File) {
+        mime_type = input.file.type;
+    } else {
+        mime_type = input.file.mime_type;
+    }
+
+    const extension = input.original_name.split('.').pop()?.toLowerCase();
+    let folder = 'document';
+
+    if (['image/jpeg', 'image/png'].includes(mime_type) || ['jpg', 'jpeg', 'png'].includes(extension || '')) {
+        folder = 'image';
+    } else if (mime_type === 'application/pdf' || extension === 'pdf') {
+        folder = 'document';
+    } else if (['text/plain', 'text/markdown'].includes(mime_type) || ['txt', 'md'].includes(extension || '')) {
+        folder = 'text';
+    }
+
     const date_string = new Date().toISOString().slice(0, 10);
-    const storage_path = join(STORAGE_PATH, 'image', date_string);
+    const storage_path = join(STORAGE_PATH, folder, date_string);
     const file_path = join(storage_path, input.uuid, input.original_name);
 
     await mkdir(join(storage_path, input.uuid), {recursive: true});
@@ -22,7 +40,7 @@ export const uploadFile = async (input: {
 
     await writeFile(file_path, buffer);
 
-    return {uuid: input.uuid, type: 'image', path: file_path};
+    return {uuid: input.uuid, type: folder === 'image' ? 'image' : 'file', path: file_path};
 }
 
 export const findFileByUuid = async (uuid: string): Promise<{
