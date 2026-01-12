@@ -6,7 +6,7 @@ import {prompt as usePrompt} from "../prompts/agent.use.ts";
 import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
 import {langfuseService} from "./langfuse.service.ts";
 import {completion, modelId} from "./llm.service.ts";
-import {currentCall, formatDocuments, lastUserMessage} from "../utils/agent.ts";
+import {currentCall, formatDocuments, lastUserMessage, shouldContinue} from "../utils/agent.ts";
 
 function createAiService() {
 
@@ -105,7 +105,7 @@ function createAiService() {
 
             let newState: State = state
 
-            while (newState.step < newState.max_steps) {
+            while (shouldContinue(newState)) {
                 console.log(`🔁 Starting step #${newState.step}`)
                 const span = langfuseService.startSpan(trace, {
                     name: `step ${newState.step}`, input: {

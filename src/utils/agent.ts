@@ -11,3 +11,5 @@ export const formatDocuments = (state: State) => {
         </document>
     `).join('\n')
 }
+
+export const shouldContinue = (state: State) => state.step <= state.max_steps
