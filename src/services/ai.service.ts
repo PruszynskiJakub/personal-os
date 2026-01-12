@@ -34,7 +34,7 @@ function createAiService() {
                 name: `thinking #${state.step}`,
                 model: modelId,
                 input: {
-                    last_user_message: [lastUserMessage(state)],
+                    user_message: [lastUserMessage(state)],
                     ...prompt_input
                 },
                 prompt: prompt,
