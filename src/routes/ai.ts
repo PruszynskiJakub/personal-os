@@ -54,7 +54,7 @@ ai.post("/chat", async (c: Context) => {
     })
 
     langfuseService.finalizeTrace(trace, {messages: body.messages, completion: answer as string})
-    langfuseService.flush()
+    await langfuseService.flush()
 
     return c.json({response: answer});
 });
