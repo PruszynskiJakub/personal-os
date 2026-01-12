@@ -3,6 +3,9 @@ import type {Document} from "../types/agent.ts";
 
 
 function createDocumentService() {
+
+    const documents:Map<string, Document> = new Map<string, Document>();
+
     return {
         async createDocument(params: {
             uuid?: string,
@@ -12,12 +15,25 @@ function createDocumentService() {
             const document_uuid = params.uuid ?? uuidv4();
             const now = new Date().toISOString()
 
-            return {
+            const document = {
                 uuid: document_uuid,
                 conversation_uuid: params.conversation_uuid,
                 text: params.text,
                 created_at: now,
                 updated_at: now,
+            }
+
+            documents.set(document_uuid, document)
+
+            return document
+        },
+
+        async getDocumentByUuid(uuid: string): Promise<Document | null> {
+            try {
+                return documents.get(uuid);
+            } catch (error) {
+                console.error(`Failed to fetch document with UUID ${uuid}:`, error);
+                return null
             }
         },
 
