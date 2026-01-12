@@ -44,6 +44,21 @@ export const tool_registry = [
         executor: (action: string, payload: Record<string, any>) => {
             return logbookService.execute(action as LogbookAction, payload)
         }
+    },{
+        name: "document_processor",
+        description: "...",
+        actions: [
+            {
+                name: "synthesize",
+                description: "...",
+                instructions: `
+                    {
+                        "query:" : "...",
+                        "documents": [..uuids..]
+                    }
+                `
+            }
+        ]
     }
 ]
 
