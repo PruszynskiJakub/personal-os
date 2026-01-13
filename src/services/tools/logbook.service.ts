@@ -57,7 +57,8 @@ const logbookService = {
 
                     return documentService.createDocument({
                         conversation_uuid: conversation_uuid,
-                        text: document_text
+                        text: document_text,
+                        description: 'List of dives added to the logbook'
                     })
                 } else {
                     return documentService.createErrorDocument({
@@ -93,7 +94,8 @@ const logbookService = {
 
                     return documentService.createDocument({
                         conversation_uuid: conversation_uuid,
-                        text: document_text
+                        text: document_text,
+                        description: 'The last ${limit} dives fetched from the logbook',
                     })
                 } else {
                     return documentService.createErrorDocument({

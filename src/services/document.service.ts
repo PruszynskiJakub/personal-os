@@ -12,6 +12,7 @@ function createDocumentService() {
             conversation_uuid: string,
             text: string,
             source_uuid?: string,
+            description?: string,
         }): Promise<Document> {
             const document_uuid = params.uuid ?? uuidv4();
             const now = new Date().toISOString()
