@@ -6,8 +6,17 @@ export interface Document {
     source_uuid: string | null;
     conversation_uuid: string;
     text: string;
+    metadata: DocumentMetadata,
     created_at: string;
     updated_at: string;
+}
+
+export type DocumentMetadata = {
+    uuid: string;
+    conversation_uuid: string;
+    source_uuid: string;
+    content_type: 'chunk' | 'full';
+    chunk_index?: number;
 }
 
 export interface ToolUsePayload {

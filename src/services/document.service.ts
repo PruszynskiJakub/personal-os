@@ -11,16 +11,24 @@ function createDocumentService() {
             uuid?: string,
             conversation_uuid: string,
             text: string,
+            source_uuid?: string,
         }): Promise<Document> {
             const document_uuid = params.uuid ?? uuidv4();
             const now = new Date().toISOString()
 
-            const document = {
+            const document: Document = {
                 uuid: document_uuid,
                 conversation_uuid: params.conversation_uuid,
+                source_uuid: params.source_uuid || '',
                 text: params.text,
                 created_at: now,
                 updated_at: now,
+                metadata: {
+                    uuid: document_uuid,
+                    conversation_uuid: params.conversation_uuid,
+                    source_uuid: params.source_uuid || '',
+                    content_type: 'full',
+                }
             }
 
             documents.set(document_uuid, document)
