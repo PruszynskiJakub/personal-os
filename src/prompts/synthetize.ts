@@ -22,7 +22,7 @@ export const prompt = (query: string, prevAnswer: string): string => {
     </user_query>
     
     <previous_answer>
-    ${prevAnswer || ''}
+    ${prevAnswer || 'No answer yet generated'}
     </previous_answer>
     
     IMPORTANT: Provide only the updated Master Summary. No preamble or meta-commentary.
