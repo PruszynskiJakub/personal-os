@@ -4,7 +4,7 @@ import type {Document} from "../types/agent.ts";
 
 function createDocumentService() {
 
-    const documents:Map<string, Document> = new Map<string, Document>();
+    const documents: Map<string, Document> = new Map<string, Document>();
 
     return {
         async createDocument(params: {
