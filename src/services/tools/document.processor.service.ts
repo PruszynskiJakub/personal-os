@@ -43,7 +43,7 @@ const documentProcessorService = {
                     const completion_config: CompletionConfig = {
                         messages: [
                             {role: 'system', content: synthetizePrompt(query, answer)},
-                            {role: 'user', content: '...' }, //TODO('Improve it !!!')
+                            {role: 'user', content: `Refine your answer based on this new information ${doc.text}` },
 
                         ],
                         temperature: 0,
@@ -51,7 +51,7 @@ const documentProcessorService = {
                     }
 
                     const result = completion.text(completion_config)
-                    //TODO('Improve it !!!')
+
                 }
 
                 return documentService.createDocument({
