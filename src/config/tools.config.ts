@@ -1,4 +1,5 @@
 import {type LogbookAction, logbookService} from "../services/tools/logbook.service.ts";
+import {type DocumentAction, documentProcessorService} from "../services/tools/document.processor.service.ts";
 
 export const tool_registry = [
     {
@@ -58,7 +59,10 @@ export const tool_registry = [
                     }
                 `
             }
-        ]
+        ],
+        executor: (action: string, payload: Record<string, any>) => {
+            return documentProcessorService.execute(action as DocumentAction, payload)
+        }
     }
 ]
 
