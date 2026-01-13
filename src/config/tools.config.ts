@@ -47,17 +47,17 @@ export const tool_registry = [
         }
     },{
         name: "document_processor",
-        description: "...", //TODO('Improve it!')
+        description: "Use it whenever user needs to process or transform text like summary, synthesis etc.",
         actions: [
             {
                 name: "synthesize",
-                description: "...", //TODO('Improve it!')
+                description: "Use when a synthesis of a document in the context of user query is needed",
                 instructions: `
                     {
-                        "query:" : "...",
-                        "documents": [..uuids..]
+                        "query:" : "User query related to synthesis",
+                        "documents": [..documents' exact uuids..]
                     }
-                `//TODO('Improve it!')
+                    `,
             }
         ],
         executor: (action: string, payload: Record<string, any>) => {
