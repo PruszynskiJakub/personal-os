@@ -17,6 +17,7 @@ export type DocumentMetadata = {
     source_uuid: string;
     content_type: 'chunk' | 'full';
     chunk_index?: number;
+    description?: string;
 }
 
 export interface ToolUsePayload {
