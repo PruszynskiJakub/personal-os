@@ -3,6 +3,7 @@ import type {LangfuseTraceClient} from "langfuse";
 
 export interface Document {
     uuid: string;
+    source_uuid: string | null;
     conversation_uuid: string;
     text: string;
     created_at: string;
