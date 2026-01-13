@@ -30,7 +30,7 @@ function createDocumentService() {
 
         async getDocumentByUuid(uuid: string): Promise<Document | null> {
             try {
-                return documents.get(uuid);
+                return documents.get(uuid) ?? null;
             } catch (error) {
                 console.error(`Failed to fetch document with UUID ${uuid}:`, error);
                 return null
