@@ -47,17 +47,17 @@ export const tool_registry = [
         }
     },{
         name: "document_processor",
-        description: "...",
+        description: "...", //TODO('Improve it!')
         actions: [
             {
                 name: "synthesize",
-                description: "...",
+                description: "...", //TODO('Improve it!')
                 instructions: `
                     {
                         "query:" : "...",
                         "documents": [..uuids..]
                     }
-                `
+                `//TODO('Improve it!')
             }
         ],
         executor: (action: string, payload: Record<string, any>) => {
