@@ -1,5 +1,6 @@
 import {type LogbookAction, logbookService} from "../services/tools/logbook.service.ts";
 import {type DocumentAction, documentProcessorService} from "../services/tools/document.processor.service.ts";
+import {type WebAction, webService} from "../services/tools/web.service.ts";
 
 export const tool_registry = [
     {
@@ -45,7 +46,7 @@ export const tool_registry = [
         executor: (action: string, payload: Record<string, any>) => {
             return logbookService.execute(action as LogbookAction, payload)
         }
-    },{
+    }, {
         name: "document_processor",
         description: "Use it whenever user needs to process or transform text like summary, synthesis etc.",
         actions: [
@@ -62,6 +63,24 @@ export const tool_registry = [
         ],
         executor: (action: string, payload: Record<string, any>) => {
             return documentProcessorService.execute(action as DocumentAction, payload)
+        }
+    },
+    {
+        name: "web",
+        description: "Use it whenever user needs to scrape a webpage",
+        actions: [
+            {
+                name: "scrape",
+                description: "Use when a synthesis of a document in the context of user query is needed",
+                instructions: `
+                    {
+                        "url:" : "url of the webpage to scrape"
+                    }
+                    `,
+            }
+        ],
+        executor: (action: string, payload: Record<string, any>) => {
+            return webService.execute(action as WebAction, payload)
         }
     }
 ]

@@ -31,6 +31,14 @@ const prompt = (state: State): string => {
         `)}
     </available_actions>
     
+    <documents>
+    ${state.documents?.map(document => `
+        <document uuid="${document.uuid}" description="${document.metadata.description}">
+            ${document.text.substring(0, 200)}
+        </document>
+    `) }
+    </documents>
+    
     Remember json and nothing else.
     CRITICAL: The action must be choosen based on your thoughts.
     `
