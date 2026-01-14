@@ -34,7 +34,7 @@ const prompt = (state: State): string => {
     <documents>
     ${state.documents?.map(document => `
         <document uuid="${document.uuid}" description="${document.metadata.description}">
-            ${document.text.substring(0, 200)}
+            ${document.text}
         </document>
     `) }
     </documents>

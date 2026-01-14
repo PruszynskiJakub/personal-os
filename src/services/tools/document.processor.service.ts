@@ -9,7 +9,7 @@ export type DocumentAction = 'synthesize'
 
 const synthetizeDocumentsSchema = z.object({
     conversation_uuid: z.string(),
-    uuids: z.array(z.string()),
+    documents_uuids: z.array(z.string()),
     query: z.string()
 })
 
@@ -21,9 +21,9 @@ const documentProcessorService = {
     ): Promise<Document> => {
         switch (action) {
             case 'synthesize':
-                const {conversation_uuid, uuids, query} = synthetizeDocumentsSchema.parse(payload);
+                const {conversation_uuid, documents_uuids, query} = synthetizeDocumentsSchema.parse(payload);
                 const documents = await Promise.all(
-                    uuids.map(async uuid => {
+                    documents_uuids.map(async uuid => {
                         const doc = await documentService.getDocumentByUuid(uuid)
                         if (!doc) {
                             return documentService.createErrorDocument({
@@ -37,7 +37,7 @@ const documentProcessorService = {
                     })
                 )
 
-                const answer = ""
+                let answer = ""
 
                 for(const doc of documents) {
                     const completion_config: CompletionConfig = {
@@ -50,8 +50,8 @@ const documentProcessorService = {
                         max_tokens: 4000
                     }
 
-                    const result = completion.text(completion_config)
-
+                    const result = await completion.text(completion_config)
+                    answer = result
                 }
 
                 return documentService.createDocument({

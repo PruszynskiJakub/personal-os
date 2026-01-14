@@ -56,7 +56,7 @@ export const tool_registry = [
                 instructions: `
                     {
                         "query:" : "User query related to synthesis",
-                        "documents": [..documents' exact uuids..]
+                        "documents_uuids": [..documents' exact uuids..]
                     }
                     `,
             }
