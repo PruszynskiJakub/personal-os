@@ -70,7 +70,7 @@ export const tool_registry = [
         description: "Use it whenever user needs to scrape a webpage",
         actions: [
             {
-                name: "scrape",
+                name: "scrape_url",
                 description: "Use when a synthesis of a document in the context of user query is needed",
                 instructions: `
                     {
