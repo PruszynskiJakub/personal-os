@@ -1,28 +1,60 @@
-import { Hono } from "hono";
-import { generateText } from "ai";
-import { google } from "@ai-sdk/google";
+import {Hono} from "hono";
+import {logger} from "hono/logger";
+import {prettyJSON} from 'hono/pretty-json';
+import {ai} from "./src/routes/ai.ts";
+import {langfuseService} from "./src/services/langfuse.service.ts";
+import type {CoreMessage} from "ai";
+import {completion} from "./src/services/llm.service.ts";
+import {attachmentsMiddleware} from "./src/middlewares/attachments.middleware.ts";
+import {files} from "./src/routes/files.ts";
 
 const app = new Hono();
 
-interface Message {
-  role: "user" | "assistant" | "system";
-  content: string;
-}
+app.use('*', logger());
+app.use('*', prettyJSON());
 
-app.post("/chat", async (c) => {
-  const body = await c.req.json<{ messages: Message[] }>();
-  const lastUserMessage = body.messages.findLast((m) => m.role === "user");
+const cleanup = async () => {
+    await langfuseService.shutdown()
+    process.exit(0);
+};
 
-  if (!lastUserMessage) {
-    return c.json({ error: "No user message found" }, 400);
-  }
+process.on('SIGTERM', cleanup);
+process.on('SIGINT', cleanup);
 
-  const result = await generateText({
-    model: google("gemini-2.0-flash"),
-    prompt: lastUserMessage.content,
-  });
+app.use("/api/ai/chat", attachmentsMiddleware)
 
-  return c.json({ response: result.text });
-});
 
-export default app;
+app.route("/api/ai", ai)
+app.route("/api/files", files)
+
+app.post("/test", async (c) => {
+    const body = await c.req.formData()
+    const file = body.get('file') as File
+
+    console.log(file)
+
+    const buffer = await file.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64')// Convert to base64
+
+    const completionConfig = {
+        messages: [
+            {
+                role: 'system',
+                content: "Describe with great care what you see in the image. Extract key diving record data.Return only the diving data."
+            },
+            {role: 'user', content: [{type: 'image', image: base64}]}
+        ] as CoreMessage[],
+        temperature: 0.2,
+        max_tokens: 4000,
+    }
+
+
+    const result = await completion.text(completionConfig)
+
+    return c.json({response: result});
+})
+
+export default {
+    port: process.env.PORT || 3000,
+    fetch: app.fetch,
+};

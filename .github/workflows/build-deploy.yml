@@ -1,0 +1,97 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      image_name: ${{ steps.lowercase.outputs.image_name }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lowercase image name
+        id: lowercase
+        run: echo "image_name=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ steps.lowercase.outputs.image_name }}
+          tags: |
+            type=sha,prefix=
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          LANGFUSE_SECRET: ${{ secrets.LANGFUSE_SECRET_KEY }}
+          LANGFUSE_PUBLIC: ${{ secrets.LANGFUSE_PUBLIC_KEY }}
+          LANGFUSE_URL: ${{ secrets.LANGFUSE_BASE_URL }}
+          SERPER_KEY: ${{ secrets.SERPER_API_KEY }}
+          USER_ID: ${{ secrets.USER_ID }}
+          APP_URL: ${{ secrets.APP_URL }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ secrets.VPS_PORT }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: GOOGLE_API_KEY,LANGFUSE_SECRET,LANGFUSE_PUBLIC,LANGFUSE_URL,SERPER_KEY,USER_ID,APP_URL
+          script: |
+            docker pull ${{ env.REGISTRY }}/${{ needs.build.outputs.image_name }}:latest
+            docker stop personal-os || true
+            docker rm personal-os || true
+            docker run -d \
+              --name personal-os \
+              --restart unless-stopped \
+              -p 40055:3000 \
+              -e GOOGLE_GENERATIVE_AI_API_KEY=$GOOGLE_API_KEY \
+              -e LANGFUSE_SECRET_KEY=$LANGFUSE_SECRET \
+              -e LANGFUSE_PUBLIC_KEY=$LANGFUSE_PUBLIC \
+              -e LANGFUSE_BASE_URL=$LANGFUSE_URL \
+              -e SERPER_API_KEY=$SERPER_KEY \
+              -e USER_ID=$USER_ID \
+              -e APP_URL=$APP_URL \
+              ${{ env.REGISTRY }}/${{ needs.build.outputs.image_name }}:latest
