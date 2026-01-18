@@ -86,7 +86,7 @@ jobs:
             docker run -d \
               --name personal-os \
               --restart unless-stopped \
-              -p 3000:3000 \
+              -p 40055:3000 \
               -e GOOGLE_GENERATIVE_AI_API_KEY=$GOOGLE_API_KEY \
               -e LANGFUSE_SECRET_KEY=$LANGFUSE_SECRET \
               -e LANGFUSE_PUBLIC_KEY=$LANGFUSE_PUBLIC \
