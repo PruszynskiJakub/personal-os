@@ -57,3 +57,15 @@ export interface State {
     documents: Document[],
     call_stack: ToolCall[],
 }
+
+// Streaming event types for real-time agent progress feedback
+export type AgentEvent =
+    | { type: 'step_start'; step: number; max_steps: number }
+    | { type: 'thinking'; message: string }
+    | { type: 'tool_selected'; tool: string; description: string }
+    | { type: 'tool_executing'; tool: string; action: string }
+    | { type: 'tool_result'; success: boolean; summary: string }
+    | { type: 'error'; error: string; recoverable: boolean }
+    | { type: 'answer_start' }
+    | { type: 'answer_chunk'; text: string }
+    | { type: 'done'; trajectory: string[] }

@@ -4,15 +4,21 @@ import {aiService} from "../services/ai.service.ts";
 import {completion, modelId} from "../services/llm.service.ts";
 import {streamSSE} from "hono/streaming";
 import {prompt as answerPrompt} from "../prompts/agent.answer.ts"
-import type {State} from "../types/agent.ts";
+import type {AgentEvent, State} from "../types/agent.ts";
 import {v4 as uuidv4} from 'uuid';
 import {langfuseService} from "../services/langfuse.service.ts";
+import {
+    createAnswerChunkEvent,
+    createAnswerStartEvent,
+    createDoneEvent,
+    formatSSEEvent
+} from "../utils/streaming.ts";
 
 
 export const ai = new Hono()
 
 ai.post("/chat", async (c: Context) => {
-    const body = c.get("request") as { messages: CoreMessage[], stream: boolean, conversation_uuid?: string }
+    const body = c.get("request") as { messages: CoreMessage[], stream?: boolean, conversation_uuid?: string }
 
     const conversation_uuid = body.conversation_uuid ?? uuidv4();
 
@@ -27,11 +33,82 @@ ai.post("/chat", async (c: Context) => {
         call_stack: []
     }
 
-    const newState = await aiService.process(state, trace);
+    // Streaming mode: return SSE stream with real-time progress events
+    if (body.stream) {
+        return streamSSE(c, async (stream) => {
+            let finalState: State = state
+
+            // Stream agent progress events
+            const generator = aiService.process(state, trace)
+            let result = await generator.next()
+
+            while (!result.done) {
+                const event = result.value as AgentEvent
+                await stream.writeSSE({data: formatSSEEvent(event)})
+                result = await generator.next()
+            }
+
+            // Generator returned the final state
+            finalState = result.value as State
+
+            const completionConfig = {
+                messages: [
+                    {role: 'system', content: answerPrompt(finalState)},
+                    ...body.messages
+                ] as CoreMessage[],
+                temperature: 0.2,
+                max_tokens: 2000,
+            }
+
+            const generation = langfuseService.startGeneration(trace, {
+                name: "answer",
+                model: modelId,
+                input: completionConfig.messages
+            })
+
+            // Emit answer_start event
+            await stream.writeSSE({data: formatSSEEvent(createAnswerStartEvent())})
+
+            // Stream the final answer token by token
+            let fullAnswer = ""
+            const textStream = completion.stream(completionConfig)
+            for await (const chunk of textStream) {
+                fullAnswer += chunk
+                await stream.writeSSE({data: formatSSEEvent(createAnswerChunkEvent(chunk))})
+            }
+
+            langfuseService.endGeneration(generation, {
+                output: {
+                    answer: fullAnswer,
+                    trajectory: finalState.call_stack.map(c => `${c.tool}${c.action ? `_${c.action}` : ''}`),
+                }
+            })
+
+            // Emit done event with trajectory
+            const trajectory = finalState.call_stack.map(c => `${c.tool}${c.action ? `_${c.action}` : ''}`)
+            await stream.writeSSE({data: formatSSEEvent(createDoneEvent(trajectory))})
+
+            langfuseService.finalizeTrace(trace, {messages: body.messages, completion: fullAnswer})
+            await langfuseService.flush()
+        })
+    }
+
+    // Non-streaming mode: consume generator silently and return JSON (backwards compatibility)
+    let finalState: State = state
+    const generator = aiService.process(state, trace)
+    let result = await generator.next()
+
+    while (!result.done) {
+        // Discard events, just continue
+        result = await generator.next()
+    }
+
+    // Generator returned the final state
+    finalState = result.value as State
 
     const completionConfig = {
         messages: [
-            {role: 'system', content: answerPrompt(newState)},
+            {role: 'system', content: answerPrompt(finalState)},
             ...body.messages
         ] as CoreMessage[],
         temperature: 0.2,
@@ -49,7 +126,7 @@ ai.post("/chat", async (c: Context) => {
     langfuseService.endGeneration(generation, {
         output: {
             answer: answer,
-            trajectory: newState.call_stack.map(c => `${c.tool}${c.action? `_${c.action}` : ''}`),
+            trajectory: finalState.call_stack.map(c => `${c.tool}${c.action ? `_${c.action}` : ''}`),
         }
     })
 
@@ -58,24 +135,3 @@ ai.post("/chat", async (c: Context) => {
 
     return c.json({response: answer});
 });
-
-
-function streamResponse(c: Context, s: AsyncIterable<string>) {
-    c.header('Content-Type', 'text/event-stream')
-    c.header('Cache-Control', 'no-cache')
-    c.header('Connection', 'keep-alive')
-
-    return streamSSE(c, async (stream: {
-        writeSSE: (arg0: { data: string; event: string; id: string; }) => any;
-        sleep: (arg0: number) => any;
-    }) => {
-
-        for await (const event of s) {
-            const sseData: any = {
-                data: JSON.stringify(event),
-            };
-
-            stream.writeSSE(sseData);
-        }
-    })
-}

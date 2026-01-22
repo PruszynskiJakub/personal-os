@@ -3,10 +3,19 @@ import {produce} from "immer";
 import type {LangfuseSpanClient, LangfuseTraceClient} from "langfuse";
 import {formatted_tools, tool_registry} from "../config/tools.config.ts";
 import {prompt as usePrompt} from "../prompts/agent.use.ts";
-import type {State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
+import type {AgentEvent, State, ThoughtsResponse, ToolUseResponse} from "../types/agent.ts";
 import {langfuseService} from "./langfuse.service.ts";
 import {completion, modelId} from "./llm.service.ts";
 import {currentCall, formatDocuments, lastUserMessage, shouldContinue} from "../utils/agent.ts";
+import {
+    createErrorEvent,
+    createStepStartEvent,
+    createThinkingEvent,
+    createToolExecutingEvent,
+    createToolResultEvent,
+    createToolSelectedEvent,
+    extractDocumentSummary
+} from "../utils/streaming.ts";
 
 function createAiService() {
 
@@ -101,49 +110,89 @@ function createAiService() {
             })
         },
 
-        process: async (state: State, trace: LangfuseTraceClient): Promise<State> => {
+        process: async function* (state: State, trace: LangfuseTraceClient): AsyncGenerator<AgentEvent, State, unknown> {
 
             let newState: State = state
 
             while (shouldContinue(newState)) {
                 console.log(`🔁 Starting step #${newState.step}`)
+
+                // Emit step_start event
+                yield createStepStartEvent(newState.step, newState.max_steps)
+
                 const span = langfuseService.startSpan(trace, {
                     name: `step ${newState.step}`, input: {
                         documents: state.documents
                     }
                 })
 
-                newState = await aiService.think(newState, span)
+                try {
+                    newState = await aiService.think(newState, span)
 
-                const call = currentCall(newState)
+                    const call = currentCall(newState)
 
-                if (call?.tool === "final_answer") {
+                    // Emit thinking event with reasoning
+                    yield createThinkingEvent(newState.thoughts?.next_action_reasoning || "Processing...")
+
+                    // Emit tool_selected event
+                    yield createToolSelectedEvent(
+                        call?.tool || "unknown",
+                        newState.thoughts?.next_action || "Deciding next action"
+                    )
+
+                    if (call?.tool === "final_answer") {
+                        langfuseService.endSpan(span, {
+                            output: {
+                                documents: state.documents
+                            }
+                        })
+                        console.log(`🔁Step #${newState.step} completed`)
+                        break
+                    }
+
+                    newState = await aiService.use(newState, span)
+
+                    const updatedCall = currentCall(newState)
+
+                    if (updatedCall?.payload) {
+                        // Emit tool_executing event
+                        yield createToolExecutingEvent(
+                            updatedCall.tool,
+                            updatedCall.action || "execute"
+                        )
+
+                        newState = await aiService.act(newState, span)
+
+                        // Emit tool_result event
+                        const lastDocument = newState.documents.at(-1)
+                        yield createToolResultEvent(
+                            true,
+                            extractDocumentSummary(lastDocument)
+                        )
+                    }
+
                     langfuseService.endSpan(span, {
                         output: {
                             documents: state.documents
                         }
                     })
                     console.log(`🔁Step #${newState.step} completed`)
-                    break
+                    newState = produce(newState, draft => {
+                        draft.step = draft.step + 1
+                    })
+                } catch (error) {
+                    // Emit error event
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+                    yield createErrorEvent(errorMessage, false)
+
+                    langfuseService.endSpan(span, {
+                        output: {
+                            error: errorMessage,
+                            documents: state.documents
+                        }
+                    })
+                    throw error
                 }
-
-                newState = await aiService.use(newState, span)
-
-                const updatedCall = currentCall(newState)
-
-                if (updatedCall?.payload) {
-                    newState = await aiService.act(newState, span)
-                }
-
-                langfuseService.endSpan(span, {
-                    output: {
-                        documents: state.documents
-                    }
-                })
-                console.log(`🔁Step #${newState.step} completed`)
-                newState = produce(newState, draft => {
-                    draft.step = draft.step + 1
-                })
             }
 
             return newState
