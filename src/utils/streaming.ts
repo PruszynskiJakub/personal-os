@@ -31,7 +31,21 @@ export function createStepStartEvent(step: number, max_steps: number): AgentEven
 }
 
 /**
- * Creates a thinking event
+ * Creates a thinking_start event
+ */
+export function createThinkingStartEvent(): AgentEvent {
+    return {type: 'thinking_start'};
+}
+
+/**
+ * Creates a thinking_chunk event
+ */
+export function createThinkingChunkEvent(text: string): AgentEvent {
+    return {type: 'thinking_chunk', text};
+}
+
+/**
+ * Creates a thinking event (completion)
  */
 export function createThinkingEvent(message: string): AgentEvent {
     return {type: 'thinking', message};
@@ -42,6 +56,20 @@ export function createThinkingEvent(message: string): AgentEvent {
  */
 export function createToolSelectedEvent(tool: string, description: string): AgentEvent {
     return {type: 'tool_selected', tool, description};
+}
+
+/**
+ * Creates a tool_use_start event
+ */
+export function createToolUseStartEvent(tool: string): AgentEvent {
+    return {type: 'tool_use_start', tool};
+}
+
+/**
+ * Creates a tool_use_chunk event
+ */
+export function createToolUseChunkEvent(text: string): AgentEvent {
+    return {type: 'tool_use_chunk', text};
 }
 
 /**
