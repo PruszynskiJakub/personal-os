@@ -10,10 +10,14 @@ import {currentCall, formatDocuments, lastUserMessage, shouldContinue} from "../
 import {
     createErrorEvent,
     createStepStartEvent,
+    createThinkingChunkEvent,
     createThinkingEvent,
+    createThinkingStartEvent,
     createToolExecutingEvent,
     createToolResultEvent,
     createToolSelectedEvent,
+    createToolUseChunkEvent,
+    createToolUseStartEvent,
     extractDocumentSummary
 } from "../utils/streaming.ts";
 
@@ -63,6 +67,57 @@ function createAiService() {
             })
         },
 
+        thinkStream: async function* (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): AsyncGenerator<string, State, unknown> {
+            const prompt = await langfuseService.getChatPrompt("think-chat")
+
+            const prompt_input = {
+                tools: formatted_tools,
+                documents: formatDocuments(state),
+            }
+
+            const compiled_prompt = prompt.compile(prompt_input)
+
+            const completionConfig = {
+                messages: [
+                    compiled_prompt[0],
+                    lastUserMessage(state)
+                ] as CoreMessage[],
+                temperature: 0,
+                max_tokens: 4000
+            }
+
+            const generation = langfuseService.startGeneration(observation, {
+                name: `thinking #${state.step}`,
+                model: modelId,
+                input: {
+                    user_message: [lastUserMessage(state)],
+                    ...prompt_input
+                },
+                prompt: prompt,
+            })
+
+            const {textStream, object} = completion.streamObject<ThoughtsResponse>(completionConfig)
+
+            // Yield text chunks as they arrive
+            for await (const chunk of textStream) {
+                yield chunk
+            }
+
+            // Wait for final object
+            const result = await object
+
+            langfuseService.endGeneration(generation, {output: result})
+
+            console.log("🧠 Thinking result ", result)
+
+            return produce(state, draft => {
+                draft.call_stack.push({tool: result.result.tool})
+                draft.thoughts = {}
+                draft.thoughts.next_action = result.result.description
+                draft.thoughts.next_action_reasoning = result.result._thinking
+            })
+        },
+
         use: async (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): Promise<State> => {
             const completionConfig = {
                 messages: [
@@ -80,6 +135,43 @@ function createAiService() {
             })
 
             const result = await completion.object<ToolUseResponse>(completionConfig)
+
+            langfuseService.endGeneration(generation, {output: result})
+
+            console.log("🧰 Use result ", result)
+
+            return produce(state, draft => {
+                const call = draft.call_stack.at(-1)!
+                call.action = result.result.action
+                call.payload = result.result.payload
+            })
+        },
+
+        useStream: async function* (state: State, observation: LangfuseSpanClient | LangfuseTraceClient): AsyncGenerator<string, State, unknown> {
+            const completionConfig = {
+                messages: [
+                    {role: "system", content: usePrompt(state)},
+                    lastUserMessage(state)
+                ] as CoreMessage[],
+                temperature: 0,
+                max_tokens: 4000
+            }
+
+            const generation = langfuseService.startGeneration(observation, {
+                name: `use ${currentCall(state)?.tool}`,
+                model: modelId,
+                input: completionConfig.messages
+            })
+
+            const {textStream, object} = completion.streamObject<ToolUseResponse>(completionConfig)
+
+            // Yield text chunks as they arrive
+            for await (const chunk of textStream) {
+                yield chunk
+            }
+
+            // Wait for final object
+            const result = await object
 
             langfuseService.endGeneration(generation, {output: result})
 
@@ -127,11 +219,19 @@ function createAiService() {
                 })
 
                 try {
-                    newState = await aiService.think(newState, span)
+                    // Stream thinking phase
+                    yield createThinkingStartEvent()
+                    const thinkGenerator = aiService.thinkStream(newState, span)
+                    let thinkResult = await thinkGenerator.next()
+                    while (!thinkResult.done) {
+                        yield createThinkingChunkEvent(thinkResult.value as string)
+                        thinkResult = await thinkGenerator.next()
+                    }
+                    newState = thinkResult.value as State
 
                     const call = currentCall(newState)
 
-                    // Emit thinking event with reasoning
+                    // Emit thinking completion event with reasoning
                     yield createThinkingEvent(newState.thoughts?.next_action_reasoning || "Processing...")
 
                     // Emit tool_selected event
@@ -150,7 +250,15 @@ function createAiService() {
                         break
                     }
 
-                    newState = await aiService.use(newState, span)
+                    // Stream tool use phase
+                    yield createToolUseStartEvent(call?.tool || "unknown")
+                    const useGenerator = aiService.useStream(newState, span)
+                    let useResult = await useGenerator.next()
+                    while (!useResult.done) {
+                        yield createToolUseChunkEvent(useResult.value as string)
+                        useResult = await useGenerator.next()
+                    }
+                    newState = useResult.value as State
 
                     const updatedCall = currentCall(newState)
 

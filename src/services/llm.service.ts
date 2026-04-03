@@ -37,6 +37,22 @@ const completion = {
         } catch (error) {
             throw new Error(`Object completion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
+    },
+    streamObject: <T = unknown>({max_tokens = 16384, ...config}: CompletionConfig): {
+        textStream: AsyncIterable<string>;
+        object: Promise<T>;
+    } => {
+        const result = streamObject({
+            model: model,
+            ...config,
+            maxTokens: max_tokens,
+            output: 'no-schema'
+        });
+
+        return {
+            textStream: result.textStream,
+            object: result.object as Promise<T>
+        };
     }
 }
 
