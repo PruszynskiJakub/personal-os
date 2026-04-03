@@ -57,4 +57,5 @@ app.post("/test", async (c) => {
 export default {
     port: process.env.PORT || 3000,
     fetch: app.fetch,
+    idleTimeout: 120, // 2 minutes - needed for SSE streaming during agent processing
 };
